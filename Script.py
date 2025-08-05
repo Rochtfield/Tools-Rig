@@ -116,17 +116,73 @@ def clic_bouton_Skeleton(*args):
     
 def clic_bouton_JointBend(*args):
     """Fonction pour le bouton principal 2."""
-    
+
+def clic_bouton_DeformersJoint(*args):
+    """Fonction pour le bouton principal 2."""
+
 def action_dropdown_1(*args):
     """Fonction pour le premier élément du menu déroulant."""
     cmds.circle(name="monCercleSimple")
     
 def action_dropdown_2(*args):
     """Fonction pour le deuxième élément du menu déroulant."""
-    
+
+    def create_square_controller():
+        """
+        Crée un contrôleur en forme de carré avec des points de contrôle (CVs).
+        """
+        square_points = [
+            (-1, 0, -1),  # Point 1 (coin en bas à gauche)
+            (-1, 0, 1),   # Point 2 (coin en haut à gauche)
+            (1, 0, 1),    # Point 3 (coin en haut à droite)
+            (1, 0, -1),   # Point 4 (coin en bas à droite)
+            (-1, 0, -1)   # Point 5 (retour au premier point pour fermer le carré)
+        ]
+
+        cmds.curve(d=1, p=square_points, n='square_ctrl')
+
+    # Appelle la fonction pour créer le carré
+    create_square_controller()
     
 def action_dropdown_3(*args):
     """Fonction pour le troisième élément du menu déroulant."""
+
+    def create_cube_controller():
+        """
+        Crée un contrôleur en forme de cube en utilisant la commande cmds.curve().
+        La courbe est de degré 1 (linéaire) pour avoir des arêtes droites.
+        """
+    
+        # Coordonnées des 8 sommets d'un cube de 2x2x2 unités, centré sur l'origine
+        points = [
+            # Face du bas
+            (-1, -1, -1),  # 0
+            (1, -1, -1),   # 1
+            (1, -1, 1),    # 2
+            (-1, -1, 1),   # 3
+            (-1, -1, -1),  # 0 (ferme la face du bas)
+        
+            # Arêtes verticales
+            (-1, -1, 1),   # 3
+            (-1, 1, 1),    # 4
+            (1, 1, 1),     # 5
+            (1, -1, 1),    # 2
+        
+            # Face du haut
+            (1, 1, 1),     # 5
+            (1, 1, -1),    # 6
+            (-1, 1, -1),   # 7
+            (-1, 1, 1),    # 4
+        
+            # Arête restante
+            (-1, 1, -1),   # 7
+            (1, 1, -1),    # 6
+            (1, -1, -1)    # 1 (retourne au point initial pour fermer)
+    ]
+        cmds.curve(d=1, p=points, n='cube_ctrl')
+
+    # Appelle la fonction pour créer le cube
+    create_cube_controller()
 
 def action_dropdown_4(*args):
     """Fonction pour le quatrième élément du menu déroulant."""
@@ -149,14 +205,17 @@ def create_main_window():
     main_layout = cmds.columnLayout(adjustableColumn=True, rowSpacing=10, columnAlign="center")
     
     # Ajoute les éléments de l'interface
-    cmds.text(label="Panneau de Contrôle", parent=main_layout)
+    cmds.text(label="control Pannel", parent=main_layout)
     
     # Bouton Skeleton
     cmds.button(label="Skeleton", command=clic_bouton_Skeleton, parent=main_layout)
     
-    # Bouton Controlers
+    # Bouton Bend Joint
     cmds.button(label="Bend Joint", command=clic_bouton_JointBend, parent=main_layout)
     
+    # Bouton Derformers muscles joint
+    cmds.button(label="Deformers Joint", command=clic_bouton_DeformersJoint, parent=main_layout)
+
     # --- Menu déroulant (dropdown) ---
     cmds.text(label="Select Controlers :", parent=main_layout)
     
