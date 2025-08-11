@@ -172,6 +172,7 @@ def insert_joints(start_joint_name, end_joint_name, number_of_joints_to_insert):
     # Récupération des positions
     start_pos = cmds.xform(start_joint_name, query=True, translation=True, worldSpace=True)
     end_pos = cmds.xform(end_joint_name, query=True, translation=True, worldSpace=True)
+    
     start_rot = cmds.joint(start_joint_name, query=True, orientation=True)
 
     # Création des vecteurs OpenMaya pour les calculs de distance
@@ -202,6 +203,9 @@ def insert_joints(start_joint_name, end_joint_name, number_of_joints_to_insert):
         cmds.select(clear=True) # Important pour éviter de lier les joints au mauvais parent
         new_joint = cmds.joint(p=(new_pos.x, new_pos.y, new_pos.z), n=f"{start_joint_name}_Bend_{i+1}")
         
+        # Appliquer l'orientation du joint parent au nouveau joint
+        cmds.joint(new_joint, edit=True, orientation=start_rot)
+
         # Lie le nouveau joint au parent précédent
         cmds.parent(new_joint, current_parent_joint)
         
