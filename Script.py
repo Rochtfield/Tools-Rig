@@ -159,68 +159,81 @@ def clic_Buton_JointBend(*args):
             return
 
 def insert_joints(start_joint_name, end_joint_name, number_of_joints_to_insert):
-    """
-    Insère un nombre spécifié de joints entre deux joints existants,
-    en s'assurant qu'ils sont tous à la même distance.
-    
-    Args:
-        start_joint_name (str): Le nom du joint de départ.
-        end_joint_name (str): Le nom du joint de fin.
-        number_of_joints_to_insert (int): Le nombre de joints à insérer.
-    """
+    """Insère des joints équidistants avec une orientation correcte pour les chaînes miroir."""
 
-    # Récupération des positions
     start_pos = cmds.xform(start_joint_name, query=True, translation=True, worldSpace=True)
     end_pos = cmds.xform(end_joint_name, query=True, translation=True, worldSpace=True)
     
-    start_rot = cmds.joint(start_joint_name, query=True, orientation=True)
-
-    # Création des vecteurs OpenMaya pour les calculs de distance
     start_vec = om.MVector(start_pos[0], start_pos[1], start_pos[2])
     end_vec = om.MVector(end_pos[0], end_pos[1], end_pos[2])
 
-    # Calcul de la distance totale et de la longueur de chaque segment
     total_distance = (end_vec - start_vec).length()
-    
     number_of_segments = number_of_joints_to_insert + 1
     segment_length = total_distance / number_of_segments
-
-    # Calcul du vecteur de direction
     direction_vec = (end_vec - start_vec).normal()
 
-    # Le joint parent actuel est le joint de départ
-    current_parent_joint = start_joint_name
-    
-    # Dé-parente le joint de fin pour ne pas le déplacer pendant la création des nouveaux joints
     cmds.parent(end_joint_name, world=True)
 
-    # Création des nouveaux joints
+    current_parent_joint = start_joint_name
+    new_joints = []
+    
+    # Création des nouveaux joints avec une orientation neutre
     for i in range(number_of_joints_to_insert):
         current_distance = segment_length * (i + 1)
         new_pos = start_vec + (direction_vec * current_distance)
         
-        # Crée un joint à la position calculée
-        cmds.select(clear=True) # Important pour éviter de lier les joints au mauvais parent
-        new_joint = cmds.joint(p=(new_pos.x, new_pos.y, new_pos.z), n=f"{start_joint_name}_Bend_{i+1}")
+        cmds.select(clear=True)
+        # On force l'orientation à (0,0,0) dès la création
+        new_joint = cmds.joint(p=(new_pos.x, new_pos.y, new_pos.z), n=f"{start_joint_name}_Bend_{i+1}", oj='none')
         
-        # Appliquer l'orientation du joint parent au nouveau joint
-        cmds.joint(new_joint, edit=True, orientation=start_rot)
-
-        # Lie le nouveau joint au parent précédent
         cmds.parent(new_joint, current_parent_joint)
-        
-        # Le nouveau joint devient le parent pour le prochain joint
         current_parent_joint = new_joint
+        new_joints.append(new_joint)
         
-    # Enfin, lie le joint de fin d'origine au dernier joint créé
     cmds.parent(end_joint_name, current_parent_joint)
+
+    # --- LOGIQUE POUR L'ORIENTATION ---
+    
+    # Détection du côté de la chaîne en se basant sur le nom
+    aim_vector = (1, 0, 0)
+    if "_R" in start_joint_name.upper():
+        aim_vector = (-1, 0, 0)
+
+    # La liste des joints à réorienter (en ignorant le joint de départ)
+    joints_to_orient = new_joints + [end_joint_name]
+
+    # Boucle pour orienter chaque joint de la nouvelle chaîne
+    for i in range(len(joints_to_orient) - 1):
+        current_joint = joints_to_orient[i]
+        child_joint = joints_to_orient[i + 1]
+        
+        temp_locator = cmds.spaceLocator(n=f"aimTarget_{current_joint}")[0]
+        cmds.xform(temp_locator, worldSpace=True, translation=cmds.xform(child_joint, q=True, ws=True, t=True))
+
+        aim_constraint = cmds.aimConstraint(temp_locator, current_joint, 
+                                            aimVector=aim_vector,
+                                            upVector=(0, 1, 0),
+                                            worldUpType="scene")[0]
+        
+        joint_rotation = cmds.getAttr(f"{current_joint}.rotate")[0]
+        cmds.joint(current_joint, edit=True, orientation=joint_rotation)
+        
+        cmds.delete(aim_constraint, temp_locator)
+        
+        cmds.setAttr(f"{current_joint}.rotate", 0, 0, 0)
+        
+    cmds.joint(end_joint_name, edit=True, oj='none')
+
+    # Fix Joint Orient
+    for joint in new_joints:
+        cmds.joint(joint, edit=True, orientation=(0, 0, 0))
     
     cmds.select(clear=True)
 
     print(f"{number_of_joints_to_insert} joints insérés à égale distance entre {start_joint_name} et {end_joint_name}.")
 
-# --- Lancer la fonction principale ---
-clic_Buton_JointBend()
+# --- Lancer la fonction principale
+    clic_Buton_JointBend()
 
 def clic_bouton_DeformersJoint(*args):
     """Fonction pour le bouton principal 2."""
