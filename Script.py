@@ -1,6 +1,7 @@
 import maya.cmds as cmds
 import maya.OpenMaya as om
 import math
+import maya.api.OpenMaya as om
 
 # --- Définition des fonctions pour les boutons ---
 def clic_bouton_Skeleton(*args):
@@ -34,29 +35,8 @@ def clic_bouton_Skeleton(*args):
 
     Left_Shoulder_joint = cmds.joint(name='Left_Shoulder_joint')
 
-
-    # Create the left arm joints
-    Left_Arm_joints = []
-    Left_Arm_1 = cmds.joint(p= (1,0,0),r=True, name='Left_Arm_1')
-    Left_Arm_joints.append(Left_Arm_1)
-
-    for i in range(2, 4):
-        joint_name = 'Left_Arm_{}'.format(i)
-        Arm_joint = cmds.joint(p= (1,0,0),r=True, name=joint_name)
-        Left_Arm_joints.append(Arm_joint)
-
     # Create elbow joint
     Left_Elbow_joint = cmds.joint(p= (1,0,0),r=True, name='Left_Elbow_joint')
-
-    # Create end_arm_joint
-    Left_End_Arm_joints = []
-    Left_End_Arm_1 = cmds.joint(p= (1,0,0),r=True, name='Left_End_Arm_1')
-    Left_End_Arm_joints.append(Left_Arm_1)
-
-    for i in range(2, 4):
-        joint_name = 'Left_End_Arm_{}'.format(i)
-        End_arm_joint = cmds.joint(p= (1,0,0),r=True, name=joint_name)
-        Left_End_Arm_joints.append(Arm_joint)
 
     # Create wrist joint
     Left_Wrist_joint = cmds.joint(p= (1,0,0),r=True, name='Left_Wrist_joint')
@@ -76,8 +56,6 @@ def clic_bouton_Skeleton(*args):
 
     cmds.parent (Left_Clav_joint, Spine_joints[3])
 
-    cmds.mirrorJoint(Left_Clav_joint, mb=True, myz=True, sr=('Left','Right'))
-
     # Create the hip joints
     cmds.select (clear=True)
 
@@ -87,23 +65,8 @@ def clic_bouton_Skeleton(*args):
     Left_Leg_joints = []
     Left_Leg_1 = cmds.joint(p= (0,-1,0),r=True, name='Left_Leg_1')
     Left_Leg_joints.append(Left_Leg_1)
-
-    for i in range(2, 4):
-        joint_name = 'Left_Leg_{}'.format(i)
-        Leg_joint = cmds.joint(p= (0,-1,0),r=True, name=joint_name)
-        Left_Leg_joints.append(Leg_joint)
     
     Left_Knee_joint = cmds.joint(p= (0,-1,0),r=True, name='Left_Knee_joint')
-
-    # Create the left endleg joints
-    Left_End_Leg_joints = []
-    Left_End_Leg_1 = cmds.joint(p= (0,-1,0),r=True, name='Left_End_Leg_1')
-    Left_End_Leg_joints.append(Left_End_Leg_1)
-
-    for i in range(2, 4):
-        joint_name = 'Left_End_Leg_{}'.format(i)
-        End_Leg_joint = cmds.joint(p= (0,-1,0),r=True, name=joint_name)
-        Left_End_Leg_joints.append(Left_Knee_joint)
 
     Left_Ankle_joint = cmds.joint(p= (0,-1,0),r=True,  oj='none', name='Left_Ankle_joint')    
     
@@ -113,9 +76,7 @@ def clic_bouton_Skeleton(*args):
 
     cmds.joint (Left_Leg_joint, e=True, ch=True,zso=True, oj='xyz', sao="zdown")
 
-    cmds.mirrorJoint(Left_Leg_joint, mb=True, myz=True, sr=('Left','Right'))
-
-def clic_Buton_JointBend(*args):
+def clic_Button_JointBend(*args):
     """
     Fonction principale pour insérer des joints entre deux joints sélectionnés.
     Elle affiche une fenêtre de dialogue pour demander le nombre de joints.
@@ -161,82 +122,90 @@ def clic_Buton_JointBend(*args):
 def insert_joints(start_joint_name, end_joint_name, number_of_joints_to_insert):
     """Insère des joints équidistants avec une orientation correcte pour les chaînes miroir."""
 
+ # 1. Sauvegarder la hiérarchie pour ne pas la casser
+    end_joint_parent = cmds.listRelatives(end_joint_name, parent=True, fullPath=True)
+    if end_joint_parent:
+        end_joint_parent = end_joint_parent[0]
+
+    # 3. Obtenir les positions mondiales
     start_pos = cmds.xform(start_joint_name, query=True, translation=True, worldSpace=True)
     end_pos = cmds.xform(end_joint_name, query=True, translation=True, worldSpace=True)
     
-    start_vec = om.MVector(start_pos[0], start_pos[1], start_pos[2])
-    end_vec = om.MVector(end_pos[0], end_pos[1], end_pos[2])
-
+    start_vec = om.MVector(start_pos)
+    end_vec = om.MVector(end_pos)
+    
     total_distance = (end_vec - start_vec).length()
     number_of_segments = number_of_joints_to_insert + 1
     segment_length = total_distance / number_of_segments
-    direction_vec = (end_vec - start_vec).normal()
-
-    cmds.parent(end_joint_name, world=True)
-
+    
+    # 5. Créer et positionner les nouveaux joints
     current_parent_joint = start_joint_name
     new_joints = []
+
+    # Récupérer l'orientation du joint de départ
+    start_joint_orient = cmds.getAttr(f'{start_joint_name}.jointOrient')[0]
     
-    # Création des nouveaux joints avec une orientation neutre
     for i in range(number_of_joints_to_insert):
+        # Calculer la position du nouveau joint dans l'espace mondial
         current_distance = segment_length * (i + 1)
-        new_pos = start_vec + (direction_vec * current_distance)
+        direction_vec = (end_vec - start_vec).normal()
+        new_world_pos_vec = start_vec + direction_vec * current_distance
         
         cmds.select(clear=True)
-        # On force l'orientation à (0,0,0) dès la création
-        new_joint = cmds.joint(p=(new_pos.x, new_pos.y, new_pos.z), n=f"{start_joint_name}_Bend_{i+1}", oj='none')
+
+        # Création du joint en espace mondial
+        new_joint = cmds.joint(p=(new_world_pos_vec.x, new_world_pos_vec.y, new_world_pos_vec.z), n=f"{start_joint_name}_Bend_{i+1}")
         
         cmds.parent(new_joint, current_parent_joint)
+
+        cmds.setAttr(f'{new_joint}.jointOrient', 0, 0, 0)
+        
         current_parent_joint = new_joint
         new_joints.append(new_joint)
-        
-    cmds.parent(end_joint_name, current_parent_joint)
 
-    # --- LOGIQUE POUR L'ORIENTATION ---
+    # Réinitialiser la rotation des joints pour que le jointOrient soit correct
+    for joint in [start_joint_name] + new_joints:
+        cmds.setAttr(f"{joint}.rotate", 0, 0, 0)
+        
+    # 6. Re-parenter le joint de fin à la fin de la nouvelle chaîne:
+        cmds.parent(end_joint_name, start_joint_name)
     
-    # Détection du côté de la chaîne en se basant sur le nom
-    aim_vector = (1, 0, 0)
-    if "_R" in start_joint_name.upper():
-        aim_vector = (-1, 0, 0)
-
-    # La liste des joints à réorienter (en ignorant le joint de départ)
-    joints_to_orient = new_joints + [end_joint_name]
-
-    # Boucle pour orienter chaque joint de la nouvelle chaîne
-    for i in range(len(joints_to_orient) - 1):
-        current_joint = joints_to_orient[i]
-        child_joint = joints_to_orient[i + 1]
-        
-        temp_locator = cmds.spaceLocator(n=f"aimTarget_{current_joint}")[0]
-        cmds.xform(temp_locator, worldSpace=True, translation=cmds.xform(child_joint, q=True, ws=True, t=True))
-
-        aim_constraint = cmds.aimConstraint(temp_locator, current_joint, 
-                                            aimVector=aim_vector,
-                                            upVector=(0, 1, 0),
-                                            worldUpType="scene")[0]
-        
-        joint_rotation = cmds.getAttr(f"{current_joint}.rotate")[0]
-        cmds.joint(current_joint, edit=True, orientation=joint_rotation)
-        
-        cmds.delete(aim_constraint, temp_locator)
-        
-        cmds.setAttr(f"{current_joint}.rotate", 0, 0, 0)
-        
-    cmds.joint(end_joint_name, edit=True, oj='none')
-
-    # Fix Joint Orient
-    for joint in new_joints:
-        cmds.joint(joint, edit=True, orientation=(0, 0, 0))
+    # 8. Finalisation
+    if end_joint_parent:
+        cmds.parent(end_joint_name, end_joint_parent)
     
     cmds.select(clear=True)
-
     print(f"{number_of_joints_to_insert} joints insérés à égale distance entre {start_joint_name} et {end_joint_name}.")
-
-# --- Lancer la fonction principale
-    clic_Buton_JointBend()
 
 def clic_bouton_DeformersJoint(*args):
     """Fonction pour le bouton principal 2."""
+
+def clic_Button_MirrorJoint(*args):
+    """for MirrorJoint"""
+    
+    selected_joints = cmds.ls(selection=True, type='joint')
+
+    if not selected_joints:
+        cmds.warning("select a joint before clic button")
+        return
+    
+    start_joint = selected_joints[0]
+    
+    # "check if joint have Left or Right in his name"
+    if 'Left_' in start_joint:
+        search_string = 'Left_'
+        replace_string = 'Right_'
+    elif 'Right_' in start_joint:
+        search_string = 'Right_'
+        replace_string = 'Left_'
+    else:
+        cmds.warning("joint selected must have 'Left_' or 'Right_' in his name")
+        return
+    
+    # execution of mirror
+    cmds.mirrorJoint(start_joint, mirrorBehavior=True, mirrorYZ=True, searchReplace=(search_string, replace_string))
+
+    print(f"the selection {start_joint} has been edited sucesfuly")
 
 def action_dropdown_1(*args):
     """Fonction pour le premier élément du menu déroulant."""
@@ -316,23 +285,26 @@ def create_main_window():
     if cmds.window(window_name, exists=True):
         cmds.deleteUI(window_name, window=True)
     
-    # Crée la fenêtre
+    # Create window
     window = cmds.window(window_name, title="Mutaux Arthur", widthHeight=(250, 150))
     
-    # Crée le layout
+    # Create layout
     main_layout = cmds.columnLayout(adjustableColumn=True, rowSpacing=10, columnAlign="center")
     
-    # Ajoute les éléments de l'interface
+    # Add elements on interface
     cmds.text(label="control Pannel", parent=main_layout)
     
-    # Bouton Skeleton
+    # Button Skeleton
     cmds.button(label="Skeleton", command=clic_bouton_Skeleton, parent=main_layout)
     
-    # Bouton Bend Joint
-    cmds.button(label="Bend Joint", command=clic_Buton_JointBend, parent=main_layout)
+    # Button Bend Joint
+    cmds.button(label="Bend Joint", command=clic_Button_JointBend, parent=main_layout)
     
-    # Bouton Derformers muscles joint
+    # Button Derformers muscles joint
     cmds.button(label="Deformers Joint", command=clic_bouton_DeformersJoint, parent=main_layout)
+
+    # Button Mirror Joint
+    cmds.button(label="Mirror Joint", command=clic_Button_MirrorJoint, parent=main_layout)
 
     # --- Menu déroulant (dropdown) ---
     cmds.text(label="Select Controlers :", parent=main_layout)
