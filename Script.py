@@ -1,5 +1,4 @@
 import maya.cmds as cmds
-import maya.OpenMaya as om
 import math
 import maya.api.OpenMaya as om
 
@@ -82,10 +81,10 @@ def clic_Button_JointBend(*args):
     Elle affiche une fenêtre de dialogue pour demander le nombre de joints.
     """
     
-    # Récupérer les joints sélectionnés
+    # get joints
     selected_joints = cmds.ls(selection=True, type='joint')
     
-    # Vérifier que exactement deux joints sont sélectionnés
+    # check if two joint selected
     if len(selected_joints) != 2:
         cmds.warning("Veuillez sélectionner exactement deux joints pour cette opération.")
         return
@@ -179,6 +178,76 @@ def insert_joints(start_joint_name, end_joint_name, number_of_joints_to_insert):
 
 def clic_bouton_DeformersJoint(*args):
     """Fonction pour le bouton principal 2."""
+     # Vérifier qu'un seul joint est sélectionné
+    selected_joint = cmds.ls(selection=True, type='joint')
+
+    if not selected_joint or len(selected_joint) > 1:
+        cmds.warning("Veuillez sélectionner un seul joint pour cette opération.")
+        return
+
+    parent_joint = selected_joint[0]
+    parent_rot = cmds.xform(parent_joint, query=True, rotation=True, worldSpace=True)
+
+    # Paramètres des nouveaux joints
+    radius = 2.0
+    num_joints = 4
+    angle_step = 360.0 / num_joints
+    
+    new_joints = []
+    
+    for i in range(num_joints):
+        angle_rad = math.radians(i * angle_step)
+        
+        # 1. Créer un groupe temporaire à la position du parent
+        temp_group = cmds.group(empty=True, name=f"{parent_joint}_temp_grp_{i}")
+        cmds.parent(temp_group, parent_joint)
+        cmds.setAttr(f"{temp_group}.t", 0, 0, 0)
+        cmds.setAttr(f"{temp_group}.r", parent_rot[0], parent_rot[1], parent_rot[2])
+        
+        # 2. Positionner le groupe sur le cercle
+        cmds.setAttr(f"{temp_group}.ty", radius * math.cos(angle_rad))
+        cmds.setAttr(f"{temp_group}.tz", radius * math.sin(angle_rad))
+        
+        # 3. Créer le joint
+        cmds.select(clear=True)
+        new_joint = cmds.joint(n=f"{parent_joint}_Deformers_{i+1}")
+        
+        # 4. Appliquer la transformation du groupe au joint
+        world_pos = cmds.xform(temp_group, query=True, translation=True, worldSpace=True)
+        world_rot = cmds.xform(temp_group, query=True, rotation=True, worldSpace=True)
+        
+        cmds.xform(new_joint, translation=world_pos, worldSpace=True)
+        cmds.xform(new_joint, rotation=world_rot, worldSpace=True)
+        
+        # 5. Supprimer le groupe temporaire
+        cmds.delete(temp_group)
+
+        # 7. Geler les transformations (freeze)
+        cmds.makeIdentity(new_joint, apply=True, t=1, r=1, s=1, n=0)
+        new_joints.append(new_joint)
+        
+    # 8. Parentage final des nouveaux joints
+    for joint in new_joints:
+        cmds.parent(joint, parent_joint)
+    
+    deformer_joints = cmds.ls(type='joint', recursive=True, l=True)
+    
+    # Filter for joints that contain "Deformers" in their name
+    filtered_deformer_joints = [j for j in deformer_joints if 'Deformers' in j]
+
+    if not filtered_deformer_joints:
+        cmds.warning("Aucun joint contenant 'Deformers' n'a été trouvé.")
+        return
+
+    # Boucler sur chaque joint filtré et réinitialiser son jointOrient
+    for joint in filtered_deformer_joints:
+        try:
+            cmds.setAttr(f'{joint}.jointOrient', 0, 0, 0, type='double3')
+            print(f"L'orientation de {joint} a été réinitialisée.")
+        except RuntimeError:
+            cmds.warning(f"Impossible de réinitialiser l'orientation de {joint}. L'attribut 'jointOrient' n'existe peut-être pas.")
+
+    print(f"Création de {num_joints} joints autour de l'axe X du joint {parent_joint} terminée.")
 
 def clic_Button_MirrorJoint(*args):
     """for MirrorJoint"""
