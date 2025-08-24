@@ -276,6 +276,63 @@ def clic_Button_MirrorJoint(*args):
 
     print(f"the selection {start_joint} has been edited sucesfuly")
 
+def clic_Buton_ControlersParam(*args):
+     # Vérifier si un joint est sélectionné pour obtenir son nom
+    selected_joints = cmds.ls(selection=True, type='joint')
+    
+    # Définir le nom par défaut du contrôleur
+    Ctrl_name = "Ctrl"
+    if selected_joints:
+        # Utiliser le nom du joint sélectionné comme nom du contrôleur
+        joint_name = selected_joints[0]
+        Ctrl_name = f"{joint_name.replace('joint', 'ctrl')}"
+    
+     # Afficher une fenêtre de dialogue pour demander le nombre de joints à insérer
+    result = cmds.promptDialog(
+        title="ControlersParam",
+        message="Name of the controler :",
+        button=["OK", "Cancel"],
+        defaultButton="OK",
+        text=Ctrl_name,  # Utiliser le nom par défaut pré-rempli
+        cancelButton="Annuler",
+        dismissString="Annuler"
+    )
+
+    # Récupérer l'entrée de l'utilisateur
+    response = cmds.promptDialog(query=True, button=True)
+    if response == "Annuler":
+        return
+    
+    # Récupérer le nom
+    Ctrl_name = cmds.promptDialog(query=True, text=True)
+    
+    # Vérifier que le nom n'est pas vide
+    if not Ctrl_name:
+        cmds.warning("Veuillez entrer un nom valide.")
+        return
+
+  # 1. Créer le groupe parent (Offset)
+    offset_grp = cmds.group(empty=True, name=f"{Ctrl_name}_Ctrl_Grp")
+    
+    # 2. Créer le groupe principal (Ctrl)
+    ctrl_grp = cmds.group(empty=True, name=f"{Ctrl_name}_Offset_Grp")
+    
+    # 3. Parenter le groupe Ctrl au groupe Offset
+    cmds.parent(ctrl_grp, offset_grp)
+    
+    # 4. Créer le cercle et le nommer
+    ctrl_shape = cmds.circle(name=f"{Ctrl_name}_Ctrl", normal=[1, 0, 0])[0]
+    
+    # 5. Parenter le cercle au groupe Ctrl
+    cmds.parent(ctrl_shape, ctrl_grp)
+
+     # Si un joint est sélectionné, placer la hiérarchie de contrôleurs à sa position et rotation
+    if selected_joints:
+        cmds.xform(offset_grp, translation=cmds.xform(selected_joints[0], query=True, translation=True, worldSpace=True), worldSpace=True)
+        cmds.xform(offset_grp, rotation=cmds.xform(selected_joints[0], query=True, rotation=True, worldSpace=True), worldSpace=True)
+
+    print(f"Contrôleur '{Ctrl_name}' créé avec succès dans une hiérarchie de groupes.")
+  
 def action_dropdown_1(*args):
     """Fonction pour le premier élément du menu déroulant."""
     cmds.circle(name="monCercleSimple")
@@ -377,6 +434,8 @@ def create_main_window():
 
     # --- Menu déroulant (dropdown) ---
     cmds.text(label="Select Controlers :", parent=main_layout)
+    
+    cmds.button(label="Contolers Param", command=clic_Buton_ControlersParam, parent=main_layout)
     
     option_menu = cmds.optionMenu(changeCommand=lambda item: handle_selection(item), parent=main_layout)
     cmds.menuItem(label="Circle", parent=option_menu)
