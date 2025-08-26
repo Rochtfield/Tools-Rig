@@ -276,131 +276,109 @@ def clic_Button_MirrorJoint(*args):
 
     print(f"the selection {start_joint} has been edited sucesfuly")
 
-def clic_Buton_ControlersParam(*args):
-     # Vérifier si un joint est sélectionné pour obtenir son nom
-    selected_joints = cmds.ls(selection=True, type='joint')
+def clic_Buton_ControlerParam(*args):
+    """Crée une fenêtre UI pour la création de contrôleurs avec des options de forme."""
     
-    # Définir le nom par défaut du contrôleur
-    Ctrl_name = "Ctrl"
-    if selected_joints:
-        # Utiliser le nom du joint sélectionné comme nom du contrôleur
-        joint_name = selected_joints[0]
-        Ctrl_name = f"{joint_name.replace('joint', 'ctrl')}"
-    
-     # Afficher une fenêtre de dialogue pour demander le nombre de joints à insérer
-    result = cmds.promptDialog(
-        title="ControlersParam",
-        message="Name of the controler :",
-        button=["OK", "Cancel"],
-        defaultButton="OK",
-        text=Ctrl_name,  # Utiliser le nom par défaut pré-rempli
-        cancelButton="Annuler",
-        dismissString="Annuler"
-    )
+    # Nom de la fenêtre pour s'assurer qu'il n'y en a qu'une
+    window_name = "ctrl_creator_ui"
+    if cmds.window(window_name, exists=True):
+       cmds.deleteUI(window_name, window=True)
 
-    # Récupérer l'entrée de l'utilisateur
-    response = cmds.promptDialog(query=True, button=True)
-    if response == "Annuler":
-        return
+    window = cmds.window(window_name, title="Controler Param", widthHeight=(300, 200), sizeable=False)
+
+    # Créer le layout principal
+    main_layout = cmds.columnLayout(adjustableColumn=True, rowSpacing=10, columnAlign="center")
+
+    # Vérifier si un joint est sélectionné pour pré-remplir le nom
+    selected_joints = cmds.ls(selection=True, type='joint')
+    ctrl_name = "Ctrl"
+    if selected_joints:
+        joint_name = selected_joints[0]
+        ctrl_name = joint_name.replace('joint', 'ctrl')
+
+    # Créer les éléments de l'UI
+    cmds.text(label="Name Controler:", parent=main_layout)
+    name_field = cmds.textField(text=ctrl_name, parent=main_layout)
     
-    # Récupérer le nom
-    Ctrl_name = cmds.promptDialog(query=True, text=True)
+    cmds.text(label="Shape Controler:", parent=main_layout)
+    shape_menu = cmds.optionMenu(parent=main_layout)
+    cmds.menuItem(label="Circle")
+    cmds.menuItem(label="Square")
+    cmds.menuItem(label="Cube")
+    cmds.menuItem(label="Directional Arrow")
+
+     # NOUVEAU: Ajout du menu de sélection de couleur
+    cmds.text(label="Color Controler:", parent=main_layout)
+    Color_Ctrl = cmds.optionMenu(parent=main_layout)
+    cmds.menuItem(label="Jaune (17)")
+    cmds.menuItem(label="Bleu (6)")
+    cmds.menuItem(label="Rouge (13)")
+    cmds.menuItem(label="Vert (14)")
     
-    # Vérifier que le nom n'est pas vide
-    if not Ctrl_name:
+    cmds.button(label="Create Controler", command=lambda *args: create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl, window_name), parent=main_layout)
+    
+    cmds.showWindow(window)
+
+def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl, window_name):
+    """
+    Logique de création du contrôleur.
+    Appelée par le bouton de la fenêtre UI.
+    """
+    ctrl_name = cmds.textField(name_field, query=True, text=True)
+    shape = cmds.optionMenu(shape_menu, query=True, value=True)
+    color_label = cmds.optionMenu(Color_Ctrl, query=True, value=True)
+    
+    # Extrait l'index de la couleur à partir du label du menu (ex: "Jaune (17)")
+    color_index = int(color_label.split('(')[-1].replace(')', ''))
+    
+    if not ctrl_name:
         cmds.warning("Veuillez entrer un nom valide.")
         return
 
-  # 1. Créer le groupe parent (Offset)
-    offset_grp = cmds.group(empty=True, name=f"{Ctrl_name}_Ctrl_Grp")
+    # 1. Créer le groupe parent (Offset)
+    offset_grp = cmds.group(empty=True, name=f"{ctrl_name}_Offset_Grp")
     
     # 2. Créer le groupe principal (Ctrl)
-    ctrl_grp = cmds.group(empty=True, name=f"{Ctrl_name}_Offset_Grp")
+    ctrl_grp = cmds.group(empty=True, name=f"{ctrl_name}_Ctrl_Grp")
     
     # 3. Parenter le groupe Ctrl au groupe Offset
     cmds.parent(ctrl_grp, offset_grp)
     
-    # 4. Créer le cercle et le nommer
-    ctrl_shape = cmds.circle(name=f"{Ctrl_name}_Ctrl", normal=[1, 0, 0])[0]
+    # 4. Créer la forme du contrôleur en fonction de l'option choisie
+    ctrl_shape = None
+    if shape == "Circle":
+        ctrl_shape = cmds.circle(name=f"{ctrl_name}_Ctrl", normal=[1, 0, 0])[0]
+    elif shape == "Square":
+        # Créer un carré (exemple simple)
+        square_shape = cmds.curve(d=1, p=[(0, 1, 1), (0, 1, -1), (0, -1, -1), (0, -1, 1), (0, 1, 1)], k=[0, 1, 2, 3, 4], n=f"{ctrl_name}_Ctrl")
+        ctrl_shape = square_shape
+    # Ajouter d'autres formes ici (Cube, Directional Arrow)
     
-    # 5. Parenter le cercle au groupe Ctrl
-    cmds.parent(ctrl_shape, ctrl_grp)
+    # 5. Parenter la forme au groupe Ctrl
+    if ctrl_shape:
+        cmds.parent(ctrl_shape, ctrl_grp, relative=True, shape=True)
+        # Supprimer la transformation du cercle pour garder la hiérarchie propre
+        cmds.delete(ctrl_shape, constructionHistory=True)
 
-     # Si un joint est sélectionné, placer la hiérarchie de contrôleurs à sa position et rotation
+        # Applique la couleur à la forme du contrôleur
+        shape_node = cmds.listRelatives(ctrl_shape, shapes=True)[0]
+        cmds.setAttr(f"{shape_node}.overrideEnabled", 1)
+        cmds.setAttr(f"{shape_node}.overrideColor", color_index)
+    
+    # Si un joint est sélectionné, placer la hiérarchie de contrôleurs à sa position et rotation
     if selected_joints:
-        cmds.xform(offset_grp, translation=cmds.xform(selected_joints[0], query=True, translation=True, worldSpace=True), worldSpace=True)
-        cmds.xform(offset_grp, rotation=cmds.xform(selected_joints[0], query=True, rotation=True, worldSpace=True), worldSpace=True)
-
-    print(f"Contrôleur '{Ctrl_name}' créé avec succès dans une hiérarchie de groupes.")
-  
-def action_dropdown_1(*args):
-    """Fonction pour le premier élément du menu déroulant."""
-    cmds.circle(name="monCercleSimple")
-    
-def action_dropdown_2(*args):
-    """Fonction pour le deuxième élément du menu déroulant."""
-
-    def create_square_controller():
-        """
-        Crée un contrôleur en forme de carré avec des points de contrôle (CVs).
-        """
-        square_points = [
-            (-1, 0, -1),  # Point 1 (coin en bas à gauche)
-            (-1, 0, 1),   # Point 2 (coin en haut à gauche)
-            (1, 0, 1),    # Point 3 (coin en haut à droite)
-            (1, 0, -1),   # Point 4 (coin en bas à droite)
-            (-1, 0, -1)   # Point 5 (retour au premier point pour fermer le carré)
-        ]
-
-        cmds.curve(d=1, p=square_points, n='square_ctrl')
-
-    # Appelle la fonction pour créer le carré
-    create_square_controller()
-    
-def action_dropdown_3(*args):
-    """Fonction pour le troisième élément du menu déroulant."""
-
-    def create_cube_controller():
-        """
-        Crée un contrôleur en forme de cube en utilisant la commande cmds.curve().
-        La courbe est de degré 1 (linéaire) pour avoir des arêtes droites.
-        """
-    
-        # Coordonnées des 8 sommets d'un cube de 2x2x2 unités, centré sur l'origine
-        points = [
-            # Face du bas
-            (-1, -1, -1),  # 0
-            (1, -1, -1),   # 1
-            (1, -1, 1),    # 2
-            (-1, -1, 1),   # 3
-            (-1, -1, -1),  # 0 (ferme la face du bas)
+        joint_pos = cmds.xform(selected_joints[0], query=True, translation=True, worldSpace=True)
+        joint_rot = cmds.xform(selected_joints[0], query=True, rotation=True, worldSpace=True)
         
-            # Arêtes verticales
-            (-1, -1, 1),   # 3
-            (-1, 1, 1),    # 4
-            (1, 1, 1),     # 5
-            (1, -1, 1),    # 2
+        cmds.xform(offset_grp, translation=joint_pos, worldSpace=True)
+        cmds.xform(offset_grp, rotation=joint_rot, worldSpace=True)
         
-            # Face du haut
-            (1, 1, 1),     # 5
-            (1, 1, -1),    # 6
-            (-1, 1, -1),   # 7
-            (-1, 1, 1),    # 4
-        
-            # Arête restante
-            (-1, 1, -1),   # 7
-            (1, 1, -1),    # 6
-            (1, -1, -1)    # 1 (retourne au point initial pour fermer)
-    ]
-        cmds.curve(d=1, p=points, n='cube_ctrl')
+    print(f"Contrôleur '{ctrl_name}' créé avec la forme '{shape}'.")
 
-    # Appelle la fonction pour créer le cube
-    create_cube_controller()
+    # 6. Fermer la fenêtre de l'UI
+    cmds.deleteUI(window_name, window=True)
 
-def action_dropdown_4(*args):
-    """Fonction pour le quatrième élément du menu déroulant."""
-    cmds.confirmDialog(title="Info", message="Option 4 sélectionnée !", button=["OK"])
-
+# Exécute la fonction pour créer la fenêtre UI
 
 # --- Fonction principale pour créer l'interface ---
 def create_main_window():
@@ -435,24 +413,7 @@ def create_main_window():
     # --- Menu déroulant (dropdown) ---
     cmds.text(label="Select Controlers :", parent=main_layout)
     
-    cmds.button(label="Contolers Param", command=clic_Buton_ControlersParam, parent=main_layout)
-    
-    option_menu = cmds.optionMenu(changeCommand=lambda item: handle_selection(item), parent=main_layout)
-    cmds.menuItem(label="Circle", parent=option_menu)
-    cmds.menuItem(label="Square", parent=option_menu)
-    cmds.menuItem(label="Cube", parent=option_menu)
-    cmds.menuItem(label="Directional Arrow", parent=option_menu)
-
-    # Gère la sélection du menu
-    def handle_selection(item_label):
-        if item_label == "Circle":
-            action_dropdown_1()
-        elif item_label == "Square":
-            action_dropdown_2()
-        elif item_label == "Cube":
-            action_dropdown_3()
-        elif item_label == "Directional Arrow":
-            action_dropdown_4()
+    cmds.button(label="Contoler Param", command=clic_Buton_ControlerParam, parent=main_layout)
 
     # Affiche la fenêtre
     cmds.showWindow(window)
