@@ -2,7 +2,7 @@ import maya.cmds as cmds
 import math
 import maya.api.OpenMaya as om
 
-# --- Définition des fonctions pour les boutons ---
+# --- define button ---
 def clic_bouton_Skeleton(*args):
     """Fonction pour le bouton principal 1."""
     # Create the root joint
@@ -77,8 +77,8 @@ def clic_bouton_Skeleton(*args):
 
 def clic_Button_JointBend(*args):
     """
-    Fonction principale pour insérer des joints entre deux joints sélectionnés.
-    Elle affiche une fenêtre de dialogue pour demander le nombre de joints.
+    Main function to insert joints between two selected joints.
+    It displays a dialog window to ask for the number of joints.
     """
     
     # get joints
@@ -86,47 +86,47 @@ def clic_Button_JointBend(*args):
     
     # check if two joint selected
     if len(selected_joints) != 2:
-        cmds.warning("Veuillez sélectionner exactement deux joints pour cette opération.")
+        cmds.warning("Please select exactly two joints for this operation.")
         return
         
     start_joint_name = selected_joints[0]
     end_joint_name = selected_joints[1]
     
-    # Afficher une fenêtre de dialogue pour demander le nombre de joints à insérer
+    # Show a Window for ask how many joint you want
     result = cmds.promptDialog(
         title="Insert Joints",
         message="Numbers of joints :",
         button=["OK", "Cancel"],
         defaultButton="OK",
-        cancelButton="Annuler",
-        dismissString="Annuler"
+        cancelButton="Cancel",
+        dismissString="Cancel"
     )
 
     if result == "OK":
         try:
-            # Tenter de convertir l'entrée en un nombre entier
+            # try to conveter in full number
             number_of_joints_to_insert = int(cmds.promptDialog(query=True, text=True))
             
             if number_of_joints_to_insert <= 0:
-                cmds.warning("Veuillez entrer un nombre positif supérieur à zéro.")
+                cmds.warning("Please try with a positif number upper than 0.")
                 return
 
-            # Appeler la fonction d'insertion de joints
+            # Call the function for append joints
             insert_joints(start_joint_name, end_joint_name, number_of_joints_to_insert)
             
         except ValueError:
-            cmds.warning("L'entrée doit être un nombre entier valide.")
+            cmds.warning("The input must be a valid integer.")
             return
 
 def insert_joints(start_joint_name, end_joint_name, number_of_joints_to_insert):
-    """Insère des joints équidistants avec une orientation correcte pour les chaînes miroir."""
+    """Inserts equidistant joints with correct orientation for mirror chains."""
 
- # 1. Sauvegarder la hiérarchie pour ne pas la casser
+ # Save the hierarchy to not break it
     end_joint_parent = cmds.listRelatives(end_joint_name, parent=True, fullPath=True)
     if end_joint_parent:
         end_joint_parent = end_joint_parent[0]
 
-    # 3. Obtenir les positions mondiales
+    # Get the world positions
     start_pos = cmds.xform(start_joint_name, query=True, translation=True, worldSpace=True)
     end_pos = cmds.xform(end_joint_name, query=True, translation=True, worldSpace=True)
     
@@ -137,22 +137,22 @@ def insert_joints(start_joint_name, end_joint_name, number_of_joints_to_insert):
     number_of_segments = number_of_joints_to_insert + 1
     segment_length = total_distance / number_of_segments
     
-    # 5. Créer et positionner les nouveaux joints
+    # Create and position the new joints
     current_parent_joint = start_joint_name
     new_joints = []
 
-    # Récupérer l'orientation du joint de départ
+    # Get the orient of the starting joint
     start_joint_orient = cmds.getAttr(f'{start_joint_name}.jointOrient')[0]
     
     for i in range(number_of_joints_to_insert):
-        # Calculer la position du nouveau joint dans l'espace mondial
+        # Calculate the position of the new joint in the world space
         current_distance = segment_length * (i + 1)
         direction_vec = (end_vec - start_vec).normal()
         new_world_pos_vec = start_vec + direction_vec * current_distance
         
         cmds.select(clear=True)
 
-        # Création du joint en espace mondial
+        # Creation of the joint in world space
         new_joint = cmds.joint(p=(new_world_pos_vec.x, new_world_pos_vec.y, new_world_pos_vec.z), n=f"{start_joint_name}_Bend_{i+1}")
         
         cmds.parent(new_joint, current_parent_joint)
@@ -162,33 +162,33 @@ def insert_joints(start_joint_name, end_joint_name, number_of_joints_to_insert):
         current_parent_joint = new_joint
         new_joints.append(new_joint)
 
-    # Réinitialiser la rotation des joints pour que le jointOrient soit correct
+    # Reset the rotation of the joints so that the jointOrient is correct
     for joint in [start_joint_name] + new_joints:
         cmds.setAttr(f"{joint}.rotate", 0, 0, 0)
         
-    # 6. Re-parenter le joint de fin à la fin de la nouvelle chaîne:
+    # Re-parent the end joint at the end of the new chain :
         cmds.parent(end_joint_name, start_joint_name)
     
-    # 8. Finalisation
+    # Finish
     if end_joint_parent:
         cmds.parent(end_joint_name, end_joint_parent)
     
     cmds.select(clear=True)
-    print(f"{number_of_joints_to_insert} joints insérés à égale distance entre {start_joint_name} et {end_joint_name}.")
+    print(f"{number_of_joints_to_insert} joints inserted at equal distance between {start_joint_name} and {end_joint_name}.")
 
 def clic_bouton_DeformersJoint(*args):
-    """Fonction pour le bouton principal 2."""
-     # Vérifier qu'un seul joint est sélectionné
+    """Function for the main button deformersJoint."""
+     # Check that only one joint is selected
     selected_joint = cmds.ls(selection=True, type='joint')
 
     if not selected_joint or len(selected_joint) > 1:
-        cmds.warning("Veuillez sélectionner un seul joint pour cette opération.")
+        cmds.warning("Please select only one joint for this operation.")
         return
 
     parent_joint = selected_joint[0]
     parent_rot = cmds.xform(parent_joint, query=True, rotation=True, worldSpace=True)
 
-    # Paramètres des nouveaux joints
+    # Parameters of the new joints
     radius = 2.0
     num_joints = 4
     angle_step = 360.0 / num_joints
@@ -198,35 +198,35 @@ def clic_bouton_DeformersJoint(*args):
     for i in range(num_joints):
         angle_rad = math.radians(i * angle_step)
         
-        # 1. Créer un groupe temporaire à la position du parent
+        # 1. Create a temporary group at the position of the parent
         temp_group = cmds.group(empty=True, name=f"{parent_joint}_temp_grp_{i}")
         cmds.parent(temp_group, parent_joint)
         cmds.setAttr(f"{temp_group}.t", 0, 0, 0)
         cmds.setAttr(f"{temp_group}.r", parent_rot[0], parent_rot[1], parent_rot[2])
         
-        # 2. Positionner le groupe sur le cercle
+        # 2. Position the group on the circle
         cmds.setAttr(f"{temp_group}.ty", radius * math.cos(angle_rad))
         cmds.setAttr(f"{temp_group}.tz", radius * math.sin(angle_rad))
         
-        # 3. Créer le joint
+        # 3. Create the joint
         cmds.select(clear=True)
         new_joint = cmds.joint(n=f"{parent_joint}_Deformers_{i+1}")
         
-        # 4. Appliquer la transformation du groupe au joint
+        # 4. Apply the group transformation to the joint
         world_pos = cmds.xform(temp_group, query=True, translation=True, worldSpace=True)
         world_rot = cmds.xform(temp_group, query=True, rotation=True, worldSpace=True)
         
         cmds.xform(new_joint, translation=world_pos, worldSpace=True)
         cmds.xform(new_joint, rotation=world_rot, worldSpace=True)
         
-        # 5. Supprimer le groupe temporaire
+        # 5. Delete the temporary group
         cmds.delete(temp_group)
 
-        # 7. Geler les transformations (freeze)
+        # 6. Freeze transformations
         cmds.makeIdentity(new_joint, apply=True, t=1, r=1, s=1, n=0)
         new_joints.append(new_joint)
         
-    # 8. Parentage final des nouveaux joints
+    # 7. Final parentage of the new joints
     for joint in new_joints:
         cmds.parent(joint, parent_joint)
     
@@ -236,18 +236,18 @@ def clic_bouton_DeformersJoint(*args):
     filtered_deformer_joints = [j for j in deformer_joints if 'Deformers' in j]
 
     if not filtered_deformer_joints:
-        cmds.warning("Aucun joint contenant 'Deformers' n'a été trouvé.")
+        cmds.warning("No joints containing 'Deformers' were found.")
         return
 
-    # Boucler sur chaque joint filtré et réinitialiser son jointOrient
+    # Loop on each filtered joint and reset its jointOrient
     for joint in filtered_deformer_joints:
         try:
             cmds.setAttr(f'{joint}.jointOrient', 0, 0, 0, type='double3')
-            print(f"L'orientation de {joint} a été réinitialisée.")
+            print(f"Orientation of {joint} has been reset.")
         except RuntimeError:
-            cmds.warning(f"Impossible de réinitialiser l'orientation de {joint}. L'attribut 'jointOrient' n'existe peut-être pas.")
+            cmds.warning(f"Unable to reset the orientation of {joint}. The 'jointOrient' attribute may not exist.")
 
-    print(f"Création de {num_joints} joints autour de l'axe X du joint {parent_joint} terminée.")
+    print(f"creation of {num_joints} joints around the X axis of the joint {parent_joint} finished.")
 
 def clic_Button_MirrorJoint(*args):
     """for MirrorJoint"""
@@ -277,26 +277,26 @@ def clic_Button_MirrorJoint(*args):
     print(f"the selection {start_joint} has been edited sucesfuly")
 
 def clic_Buton_ControlerParam(*args):
-    """Crée une fenêtre UI pour la création de contrôleurs avec des options de forme."""
+    """Creates a UI window for creating controllers with shape options."""
     
-    # Nom de la fenêtre pour s'assurer qu'il n'y en a qu'une
+    # Name of the window to ensure that there is only one
     window_name = "ctrl_creator_ui"
     if cmds.window(window_name, exists=True):
        cmds.deleteUI(window_name, window=True)
 
     window = cmds.window(window_name, title="Controler Param", widthHeight=(300, 200), sizeable=False)
 
-    # Créer le layout principal
+    # Create the main layout
     main_layout = cmds.columnLayout(adjustableColumn=True, rowSpacing=10, columnAlign="center")
 
-    # Vérifier si un joint est sélectionné pour pré-remplir le nom
+    # Check if a joint is selected to pre-fill the name
     selected_joints = cmds.ls(selection=True, type='joint')
     ctrl_name = "Ctrl"
     if selected_joints:
         joint_name = selected_joints[0]
         ctrl_name = joint_name.replace('joint', 'ctrl')
 
-    # Créer les éléments de l'UI
+    # Create the elements of the UI
     cmds.text(label="Name Controler:", parent=main_layout)
     name_field = cmds.textField(text=ctrl_name, parent=main_layout)
     
@@ -307,13 +307,13 @@ def clic_Buton_ControlerParam(*args):
     cmds.menuItem(label="Cube")
     cmds.menuItem(label="Directional Arrow")
 
-     # NOUVEAU: Ajout du menu de sélection de couleur
+     # Adding the color selection menu
     cmds.text(label="Color Controler:", parent=main_layout)
     Color_Ctrl = cmds.optionMenu(parent=main_layout)
-    cmds.menuItem(label="Jaune (17)")
-    cmds.menuItem(label="Bleu (6)")
-    cmds.menuItem(label="Rouge (13)")
-    cmds.menuItem(label="Vert (14)")
+    cmds.menuItem(label="Yellow (17)")
+    cmds.menuItem(label="Blue (6)")
+    cmds.menuItem(label="Red (13)")
+    cmds.menuItem(label="Green (14)")
     
     cmds.button(label="Create Controler", command=lambda *args: create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl, window_name), parent=main_layout)
     
@@ -321,51 +321,51 @@ def clic_Buton_ControlerParam(*args):
 
 def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl, window_name):
     """
-    Logique de création du contrôleur.
-    Appelée par le bouton de la fenêtre UI.
+    Logic for creating the controller.
+    Called by the UI window button.
     """
     ctrl_name = cmds.textField(name_field, query=True, text=True)
     shape = cmds.optionMenu(shape_menu, query=True, value=True)
     color_label = cmds.optionMenu(Color_Ctrl, query=True, value=True)
     
-    # Extrait l'index de la couleur à partir du label du menu (ex: "Jaune (17)")
+    # Extract the color index from the menu label (ex : "Yellow (17)")
     color_index = int(color_label.split('(')[-1].replace(')', ''))
     
     if not ctrl_name:
-        cmds.warning("Veuillez entrer un nom valide.")
+        cmds.warning("Please enter a valid name.")
         return
 
-    # 1. Créer le groupe parent (Offset)
-    offset_grp = cmds.group(empty=True, name=f"{ctrl_name}_Offset_Grp")
+    # 1. Create the parent group (Offset)
+    offset_grp = cmds.group(empty=True, name=f"{ctrl_name}_Ctrl_Grp")
     
-    # 2. Créer le groupe principal (Ctrl)
-    ctrl_grp = cmds.group(empty=True, name=f"{ctrl_name}_Ctrl_Grp")
+    # 2. Create the main group (Ctrl)
+    ctrl_grp = cmds.group(empty=True, name=f"{ctrl_name}_Offset_Grp")
     
-    # 3. Parenter le groupe Ctrl au groupe Offset
+    # 3. Set the Ctrl group to the Offset group
     cmds.parent(ctrl_grp, offset_grp)
     
-    # 4. Créer la forme du contrôleur en fonction de l'option choisie
+    # 4. Create the shape of the controller according to the chosen option
     ctrl_shape = None
     if shape == "Circle":
         ctrl_shape = cmds.circle(name=f"{ctrl_name}_Ctrl", normal=[1, 0, 0])[0]
     elif shape == "Square":
-        # Créer un carré (exemple simple)
+        # Create a square
         square_shape = cmds.curve(d=1, p=[(0, 1, 1), (0, 1, -1), (0, -1, -1), (0, -1, 1), (0, 1, 1)], k=[0, 1, 2, 3, 4], n=f"{ctrl_name}_Ctrl")
         ctrl_shape = square_shape
-    # Ajouter d'autres formes ici (Cube, Directional Arrow)
+    # Add other shapes here (Cube, Directional Arrow)
     
-    # 5. Parenter la forme au groupe Ctrl
+    # 5. Parent the shape to the group Ctrl
     if ctrl_shape:
         cmds.parent(ctrl_shape, ctrl_grp, relative=True, shape=True)
-        # Supprimer la transformation du cercle pour garder la hiérarchie propre
+        # Remove the transformation of the circle to keep the hierarchy clean
         cmds.delete(ctrl_shape, constructionHistory=True)
 
-        # Applique la couleur à la forme du contrôleur
+        # Apply the color to the controller shape
         shape_node = cmds.listRelatives(ctrl_shape, shapes=True)[0]
         cmds.setAttr(f"{shape_node}.overrideEnabled", 1)
         cmds.setAttr(f"{shape_node}.overrideColor", color_index)
     
-    # Si un joint est sélectionné, placer la hiérarchie de contrôleurs à sa position et rotation
+    # If a joint is selected, place the controller hierarchy at its position and rotation
     if selected_joints:
         joint_pos = cmds.xform(selected_joints[0], query=True, translation=True, worldSpace=True)
         joint_rot = cmds.xform(selected_joints[0], query=True, rotation=True, worldSpace=True)
@@ -373,18 +373,16 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
         cmds.xform(offset_grp, translation=joint_pos, worldSpace=True)
         cmds.xform(offset_grp, rotation=joint_rot, worldSpace=True)
         
-    print(f"Contrôleur '{ctrl_name}' créé avec la forme '{shape}'.")
+    print(f"Controller '{ctrl_name}' created with the form '{shape}'.")
 
-    # 6. Fermer la fenêtre de l'UI
+    # 6. Close the UI window
     cmds.deleteUI(window_name, window=True)
 
-# Exécute la fonction pour créer la fenêtre UI
-
-# --- Fonction principale pour créer l'interface ---
+# --- Main function for UI ---
 def create_main_window():
-    """Crée la fenêtre principale avec des boutons et un menu déroulant."""
+    """Create the main window with buttons and a drop-down menu."""
     
-    # Détruit l'ancienne fenêtre si elle existe
+    # Destroy the old window if it exists
     window_name = "Window"
     if cmds.window(window_name, exists=True):
         cmds.deleteUI(window_name, window=True)
@@ -402,21 +400,21 @@ def create_main_window():
     cmds.button(label="Skeleton", command=clic_bouton_Skeleton, parent=main_layout)
     
     # Button Bend Joint
-    cmds.button(label="Bend Joint", command=clic_Button_JointBend, parent=main_layout)
+    cmds.button(label="Bend Joints", command=clic_Button_JointBend, parent=main_layout)
     
     # Button Derformers muscles joint
-    cmds.button(label="Deformers Joint", command=clic_bouton_DeformersJoint, parent=main_layout)
+    cmds.button(label="Deformers Joints", command=clic_bouton_DeformersJoint, parent=main_layout)
 
     # Button Mirror Joint
-    cmds.button(label="Mirror Joint", command=clic_Button_MirrorJoint, parent=main_layout)
+    cmds.button(label="Mirror Joints", command=clic_Button_MirrorJoint, parent=main_layout)
 
-    # --- Menu déroulant (dropdown) ---
+    # Dopdown Menu
     cmds.text(label="Select Controlers :", parent=main_layout)
     
-    cmds.button(label="Contoler Param", command=clic_Buton_ControlerParam, parent=main_layout)
+    cmds.button(label="Controler Params", command=clic_Buton_ControlerParam, parent=main_layout)
 
-    # Affiche la fenêtre
+    # displays the window
     cmds.showWindow(window)
 
-# Appelle la fonction pour lancer l'interface
+# --- Call The function for create interface ---
 create_main_window()
