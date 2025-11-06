@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import maya.cmds as cmds
 
 def Controller_Parameters_UI():
@@ -8,7 +9,7 @@ def Controller_Parameters_UI():
     if cmds.window(window_name, exists=True):
        cmds.deleteUI(window_name, window=True)
 
-    window = cmds.window(window_name, title="Controler Param", widthHeight=(300, 200), sizeable=False)
+    window = cmds.window(window_name, title="Controler Param", widthHeight=(600, 1000), sizeable=True)
 
     # Create the main layout
     main_layout = cmds.columnLayout(adjustableColumn=True, rowSpacing=10, columnAlign="center")
@@ -39,11 +40,22 @@ def Controller_Parameters_UI():
     cmds.menuItem(label="Red (13)")
     cmds.menuItem(label="Green (14)")
     
-    cmds.button(label="Create Controler", command=lambda *args: create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl, window_name), parent=main_layout)
+    # Ajout d'un séparateur pour créer de l'espace avant la nouvelle section
+    cmds.separator(height=15, style='in', parent=main_layout) 
+    cmds.text(label="Extras Attributes:", parent=main_layout, align='center', font='boldLabelFont')
+
+    # --- Création de la case à cocher ---
+    IK_FK = cmds.checkBox(
+        label="IK FK", 
+        value=False,
+        parent=main_layout
+    )
+    
+    cmds.button(label="Create Controler", command=lambda *args: create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl, IK_FK, window_name), parent=main_layout)
     
     cmds.showWindow(window)
 
-def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl, window_name):
+def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,IK_FK, window_name):
     """
     Logic for creating the controller.
     Called by the UI window button.
@@ -51,7 +63,8 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
     ctrl_name = cmds.textField(name_field, query=True, text=True)
     shape = cmds.optionMenu(shape_menu, query=True, value=True)
     color_label = cmds.optionMenu(Color_Ctrl, query=True, value=True)
-    
+    IK_FK = cmds.checkBox(IK_FK, query=True, value=True)
+
     # Extract the color index from the menu label (ex : "Yellow (17)")
     color_index = int(color_label.split('(')[-1].replace(')', ''))
     
@@ -96,6 +109,8 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
         
         cmds.xform(offset_grp, translation=joint_pos, worldSpace=True)
         cmds.xform(offset_grp, rotation=joint_rot, worldSpace=True)
+        
+    
         
     print(f"Controller '{ctrl_name}' created with the form '{shape}'.")
 
