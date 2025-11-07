@@ -20,9 +20,8 @@ MODULES_DEPENDANTS = [
     'Skeleton'
 ]
 
-# ÉTAPE CRUCIALE : CHEMIN D'ACCÈS DU DOSSIER
-# REMPLACER CE CHEMIN PAR LE CHEMIN RÉEL DE VOTRE DOSSIER CONTENANT TOUS LES .PY
-# (Ex: r"C:\Users\Arthur\Desktop\Travail\Scripts\Rig_Interface_Construction\Tools-Rig")
+# ÉTAPE CRUCIALE : Path Finding
+# Replace the path by the path of the folder where all the.py are
 CHEMIN_DU_PROJET = r"C:\Users\Arthur\Desktop\Travail\Scripts\Rig_Interface_Construction\Tools-Rig" 
 # -----------------------------------
 

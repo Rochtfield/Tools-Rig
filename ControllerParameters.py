@@ -45,17 +45,23 @@ def Controller_Parameters_UI():
     cmds.text(label="Extras Attributes:", parent=main_layout, align='center', font='boldLabelFont')
 
     # --- Création de la case à cocher ---
-    IK_FK = cmds.checkBox(
-        label="IK FK", 
+    IK_FK_Checkbox_Name = cmds.checkBox(
+        label="IK FK",
         value=False,
-        parent=main_layout
+        parent=main_layout,
+    )
+
+    FootRoll_Checkbox_Name = cmds.checkBox(
+        label="FootRoll",
+        value=False,
+        parent=main_layout,
     )
     
-    cmds.button(label="Create Controler", command=lambda *args: create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl, IK_FK, window_name), parent=main_layout)
+    cmds.button(label="Create Controler", command=lambda *args: create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl, IK_FK_Checkbox_Name,FootRoll_Checkbox_Name, window_name), parent=main_layout)
     
     cmds.showWindow(window)
 
-def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,IK_FK, window_name):
+def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,IK_FK_Checkbox_Name,FootRoll_Checkbox_Name, window_name):
     """
     Logic for creating the controller.
     Called by the UI window button.
@@ -63,7 +69,8 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
     ctrl_name = cmds.textField(name_field, query=True, text=True)
     shape = cmds.optionMenu(shape_menu, query=True, value=True)
     color_label = cmds.optionMenu(Color_Ctrl, query=True, value=True)
-    IK_FK = cmds.checkBox(IK_FK, query=True, value=True)
+    is_ikfk_checked = cmds.checkBox(IK_FK_Checkbox_Name, query=True, value=True)
+    is_footroll_checked = cmds.checkBox(FootRoll_Checkbox_Name, query=True, value=True)
 
     # Extract the color index from the menu label (ex : "Yellow (17)")
     color_index = int(color_label.split('(')[-1].replace(')', ''))
@@ -86,11 +93,53 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
     if shape == "Circle":
         ctrl_shape = cmds.circle(name=f"{ctrl_name}_Ctrl", normal=[1, 0, 0])[0]
     elif shape == "Square":
-        # Create a square
         square_shape = cmds.curve(d=1, p=[(0, 1, 1), (0, 1, -1), (0, -1, -1), (0, -1, 1), (0, 1, 1)], k=[0, 1, 2, 3, 4], n=f"{ctrl_name}_Ctrl")
         ctrl_shape = square_shape
     # Add other shapes here (Cube, Directional Arrow)
     
+    # Add Extra Attribute IKFK
+    attribute_name = "IK_FK_Switch" # Utilisez un nom de variable Python propre
+    full_attr_name = f"{ctrl_name}.{attribute_name}"
+
+    if is_ikfk_checked is True:
+        attribute_name = "IK_FK_Switch" 
+        full_attr_name = f"{ctrl_shape}.{attribute_name}"
+        
+        # Le reste du code est correct pour créer l'attribut
+        if not cmds.objExists(full_attr_name):
+            cmds.addAttr(
+                ctrl_shape, 
+                longName="IK_FK", 
+                attributeType='float', 
+                minValue=0.0, 
+                maxValue=1.0, 
+                defaultValue=0.0, 
+                keyable=True,
+                niceName="IKFK Switch"
+            )
+        
+
+    # Add Extra Attribute Reversefoot
+    attribute_name = "FootRoll" # Utilisez un nom de variable Python propre
+    full_attr_name = f"{ctrl_name}.{attribute_name}"
+
+    if is_footroll_checked is True:
+        attribute_name = "FootRoll" 
+        full_attr_name = f"{ctrl_shape}.{attribute_name}"
+        
+        # Le reste du code est correct pour créer l'attribut
+        if not cmds.objExists(full_attr_name):
+            cmds.addAttr(
+                ctrl_shape, 
+                longName="FootRoll", 
+                attributeType='float', 
+                minValue=0.0, 
+                maxValue=1.0, 
+                defaultValue=0.0, 
+                keyable=True,
+                niceName="FootRoll"
+            )
+        
     # 5. Parent the shape to the group Ctrl
     if ctrl_shape:
         cmds.parent(ctrl_shape, ctrl_grp, relative=True, shape=True)
@@ -109,9 +158,8 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
         
         cmds.xform(offset_grp, translation=joint_pos, worldSpace=True)
         cmds.xform(offset_grp, rotation=joint_rot, worldSpace=True)
-        
-    
-        
+
+
     print(f"Controller '{ctrl_name}' created with the form '{shape}'.")
 
     # 6. Close the UI window
