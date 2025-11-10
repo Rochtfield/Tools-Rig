@@ -51,17 +51,17 @@ def Controller_Parameters_UI():
         parent=main_layout,
     )
 
-    FootRoll_Checkbox_Name = cmds.checkBox(
-        label="FootRoll",
+    ReverseFoot_Checkbox_Name = cmds.checkBox(
+        label="ReverseFoot",
         value=False,
         parent=main_layout,
     )
     
-    cmds.button(label="Create Controler", command=lambda *args: create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl, IK_FK_Checkbox_Name,FootRoll_Checkbox_Name, window_name), parent=main_layout)
+    cmds.button(label="Create Controler", command=lambda *args: create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl, IK_FK_Checkbox_Name,ReverseFoot_Checkbox_Name, window_name), parent=main_layout)
     
     cmds.showWindow(window)
 
-def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,IK_FK_Checkbox_Name,FootRoll_Checkbox_Name, window_name):
+def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,IK_FK_Checkbox_Name,ReverseFoot_Checkbox_Name, window_name):
     """
     Logic for creating the controller.
     Called by the UI window button.
@@ -70,7 +70,7 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
     shape = cmds.optionMenu(shape_menu, query=True, value=True)
     color_label = cmds.optionMenu(Color_Ctrl, query=True, value=True)
     is_ikfk_checked = cmds.checkBox(IK_FK_Checkbox_Name, query=True, value=True)
-    is_footroll_checked = cmds.checkBox(FootRoll_Checkbox_Name, query=True, value=True)
+    is_RevrseFoot_checked = cmds.checkBox(ReverseFoot_Checkbox_Name, query=True, value=True)
 
     # Extract the color index from the menu label (ex : "Yellow (17)")
     color_index = int(color_label.split('(')[-1].replace(')', ''))
@@ -98,14 +98,23 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
     # Add other shapes here (Cube, Directional Arrow)
     
     # Add Extra Attribute IKFK
-    attribute_name = "IK_FK_Switch" # Utilisez un nom de variable Python propre
+    attribute_name = "IK_FK"
+    attribute_name = "IK_FK_Switch"
     full_attr_name = f"{ctrl_name}.{attribute_name}"
 
     if is_ikfk_checked is True:
-        attribute_name = "IK_FK_Switch" 
-        full_attr_name = f"{ctrl_shape}.{attribute_name}"
         
-        # Le reste du code est correct pour créer l'attribut
+        if not cmds.objExists(full_attr_name):
+            enum_string = "___________"
+            cmds.addAttr(
+                ctrl_shape, 
+                longName="IK_FK_Switch", 
+                attributeType='enum',
+                enumName=enum_string,
+                defaultValue=0,
+                keyable=True,
+            )
+        
         if not cmds.objExists(full_attr_name):
             cmds.addAttr(
                 ctrl_shape, 
@@ -120,24 +129,77 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
         
 
     # Add Extra Attribute Reversefoot
-    attribute_name = "FootRoll" # Utilisez un nom de variable Python propre
+    attribute_name = "ReverseFoot"
+    attribute_name = "Bank"
+    attribute_name = "Heel_Twist"
+    attribute_name = "Toe_Twist"
+    attribute_name = "Toe_Clap"
+    attribute_name = "Roll"
     full_attr_name = f"{ctrl_name}.{attribute_name}"
 
-    if is_footroll_checked is True:
-        attribute_name = "FootRoll" 
-        full_attr_name = f"{ctrl_shape}.{attribute_name}"
+    if is_RevrseFoot_checked is True:
         
         # Le reste du code est correct pour créer l'attribut
         if not cmds.objExists(full_attr_name):
+            enum_string = "___________"
             cmds.addAttr(
                 ctrl_shape, 
-                longName="FootRoll", 
-                attributeType='float', 
-                minValue=0.0, 
-                maxValue=1.0, 
+                longName="ReverseFoot", 
+                attributeType='enum',
+                enumName=enum_string,
+                defaultValue=0,
+                keyable=True,
+            )
+
+        if not cmds.objExists(full_attr_name):
+            cmds.addAttr(
+                ctrl_shape, 
+                longName="Bank", 
+                attributeType='float',
                 defaultValue=0.0, 
                 keyable=True,
-                niceName="FootRoll"
+                niceName="Bank"
+            )
+
+        if not cmds.objExists(full_attr_name):
+            cmds.addAttr(
+                ctrl_shape, 
+                longName="Heel_Twist", 
+                attributeType='float', 
+                defaultValue=0.0, 
+                keyable=True,
+                niceName="Heel_Twist"
+            )
+
+        if not cmds.objExists(full_attr_name):
+            cmds.addAttr(
+                ctrl_shape, 
+                longName="Toe_Twist", 
+                attributeType='float',
+                defaultValue=0.0, 
+                keyable=True,
+                niceName="Toe_Twist"
+            )
+
+        if not cmds.objExists(full_attr_name):
+            cmds.addAttr(
+                ctrl_shape, 
+                longName="Toe_Clap", 
+                attributeType='float',
+                defaultValue=0.0, 
+                keyable=True,
+                niceName="Toe_Clap"
+            )
+        if not cmds.objExists(full_attr_name):
+            cmds.addAttr(
+                ctrl_shape, 
+                longName="Roll", 
+                attributeType='float', 
+                minValue=-10.0, 
+                maxValue=10.0, 
+                defaultValue=0.0, 
+                keyable=True,
+                niceName="Roll"
             )
         
     # 5. Parent the shape to the group Ctrl
