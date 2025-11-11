@@ -44,9 +44,9 @@ def Controller_Parameters_UI():
     cmds.separator(height=15, style='in', parent=main_layout) 
     cmds.text(label="Extras Attributes:", parent=main_layout, align='center', font='boldLabelFont')
 
-    # --- Création de la case à cocher ---
+    # --- CheckBox ---
     IK_FK_Checkbox_Name = cmds.checkBox(
-        label="IK FK",
+        label="IK_FK",
         value=False,
         parent=main_layout,
     )
@@ -57,11 +57,17 @@ def Controller_Parameters_UI():
         parent=main_layout,
     )
     
-    cmds.button(label="Create Controler", command=lambda *args: create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl, IK_FK_Checkbox_Name,ReverseFoot_Checkbox_Name, window_name), parent=main_layout)
+    Fingers_Param_Checkbox_Name = cmds.checkBox(
+        label="Fingers_Param",
+        value=False,
+        parent=main_layout,
+    )
+
+    cmds.button(label="Create Controler", command=lambda *args: create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl, IK_FK_Checkbox_Name, ReverseFoot_Checkbox_Name, Fingers_Param_Checkbox_Name, window_name), parent=main_layout)
     
     cmds.showWindow(window)
 
-def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,IK_FK_Checkbox_Name,ReverseFoot_Checkbox_Name, window_name):
+def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,IK_FK_Checkbox_Name,ReverseFoot_Checkbox_Name, Fingers_Param_Checkbox_Name, window_name):
     """
     Logic for creating the controller.
     Called by the UI window button.
@@ -70,7 +76,8 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
     shape = cmds.optionMenu(shape_menu, query=True, value=True)
     color_label = cmds.optionMenu(Color_Ctrl, query=True, value=True)
     is_ikfk_checked = cmds.checkBox(IK_FK_Checkbox_Name, query=True, value=True)
-    is_RevrseFoot_checked = cmds.checkBox(ReverseFoot_Checkbox_Name, query=True, value=True)
+    is_ReverseFoot_checked = cmds.checkBox(ReverseFoot_Checkbox_Name, query=True, value=True)
+    is_Fingers_Param_Checked = cmds.checkBox(Fingers_Param_Checkbox_Name, query=True, value=True)
 
     # Extract the color index from the menu label (ex : "Yellow (17)")
     color_index = int(color_label.split('(')[-1].replace(')', ''))
@@ -97,14 +104,10 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
         ctrl_shape = square_shape
     # Add other shapes here (Cube, Directional Arrow)
     
-    # Add Extra Attribute IKFK
-    attribute_name = "IK_FK"
-    attribute_name = "IK_FK_Switch"
-    full_attr_name = f"{ctrl_name}.{attribute_name}"
+
 
     if is_ikfk_checked is True:
-        
-        if not cmds.objExists(full_attr_name):
+            
             enum_string = "___________"
             cmds.addAttr(
                 ctrl_shape, 
@@ -114,8 +117,6 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
                 defaultValue=0,
                 keyable=True,
             )
-        
-        if not cmds.objExists(full_attr_name):
             cmds.addAttr(
                 ctrl_shape, 
                 longName="IK_FK", 
@@ -129,18 +130,9 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
         
 
     # Add Extra Attribute Reversefoot
-    attribute_name = "ReverseFoot"
-    attribute_name = "Bank"
-    attribute_name = "Heel_Twist"
-    attribute_name = "Toe_Twist"
-    attribute_name = "Toe_Clap"
-    attribute_name = "Roll"
-    full_attr_name = f"{ctrl_name}.{attribute_name}"
 
-    if is_RevrseFoot_checked is True:
-        
-        # Le reste du code est correct pour créer l'attribut
-        if not cmds.objExists(full_attr_name):
+    if is_ReverseFoot_checked is True:
+            
             enum_string = "___________"
             cmds.addAttr(
                 ctrl_shape, 
@@ -150,8 +142,6 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
                 defaultValue=0,
                 keyable=True,
             )
-
-        if not cmds.objExists(full_attr_name):
             cmds.addAttr(
                 ctrl_shape, 
                 longName="Bank", 
@@ -160,8 +150,6 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
                 keyable=True,
                 niceName="Bank"
             )
-
-        if not cmds.objExists(full_attr_name):
             cmds.addAttr(
                 ctrl_shape, 
                 longName="Heel_Twist", 
@@ -170,8 +158,6 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
                 keyable=True,
                 niceName="Heel_Twist"
             )
-
-        if not cmds.objExists(full_attr_name):
             cmds.addAttr(
                 ctrl_shape, 
                 longName="Toe_Twist", 
@@ -180,8 +166,6 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
                 keyable=True,
                 niceName="Toe_Twist"
             )
-
-        if not cmds.objExists(full_attr_name):
             cmds.addAttr(
                 ctrl_shape, 
                 longName="Toe_Clap", 
@@ -190,7 +174,6 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
                 keyable=True,
                 niceName="Toe_Clap"
             )
-        if not cmds.objExists(full_attr_name):
             cmds.addAttr(
                 ctrl_shape, 
                 longName="Roll", 
@@ -201,7 +184,77 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
                 keyable=True,
                 niceName="Roll"
             )
+    
+    # Add Fingers Paramaters
+    
+    if is_Fingers_Param_Checked is True : 
         
+            enum_string = "___________"
+            cmds.addAttr(
+                ctrl_shape, 
+                longName="Fingers_Parameters", 
+                attributeType='enum',
+                enumName=enum_string,
+                defaultValue=0,
+                keyable=True,
+            )
+            cmds.addAttr(
+                ctrl_shape, 
+                longName="Thumb", 
+                attributeType='float',
+                defaultValue=0.0, 
+                keyable=True,
+                niceName="Thumb"
+            )
+            cmds.addAttr(
+                ctrl_shape, 
+                longName="Index", 
+                attributeType='float',
+                defaultValue=0.0, 
+                keyable=True,
+                niceName="Index"
+            )
+            cmds.addAttr(
+                ctrl_shape, 
+                longName="Middle", 
+                attributeType='float',
+                defaultValue=0.0, 
+                keyable=True,
+                niceName="Middle"
+            )
+            cmds.addAttr(
+                ctrl_shape, 
+                longName="Ring", 
+                attributeType='float',
+                defaultValue=0.0, 
+                keyable=True,
+                niceName="Ring"
+            )
+            cmds.addAttr(
+                ctrl_shape, 
+                longName="Pinky", 
+                attributeType='float',
+                defaultValue=0.0, 
+                keyable=True,
+                niceName="Pinky"
+            )
+            cmds.addAttr(
+                ctrl_shape, 
+                longName="Merge", 
+                attributeType='float',
+                defaultValue=0.0, 
+                keyable=True,
+                niceName="Merge"
+            )
+            cmds.addAttr(
+                ctrl_shape, 
+                longName="Grab", 
+                attributeType='float',
+                defaultValue=0.0, 
+                keyable=True,
+                niceName="Grab"
+            )
+
     # 5. Parent the shape to the group Ctrl
     if ctrl_shape:
         cmds.parent(ctrl_shape, ctrl_grp, relative=True, shape=True)
