@@ -17,7 +17,8 @@ MODULES_DEPENDANTS = [
     'Deformers_Joint', 
     'Joint_Bend', 
     'Mirror', 
-    'Skeleton'
+    'Skeleton',
+    'UI_Skeleton'
 ]
 
 # ÉTAPE CRUCIALE : Path Finding

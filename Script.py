@@ -2,16 +2,16 @@
 import maya.cmds as cmds
 import math
 import maya.api.OpenMaya as om
-from Skeleton import Create_Skeleton
 from Joint_Bend import Target_Joints, Insert_Joints
 from Deformers_Joint import DeformersJoint
 from Mirror import MirrorJoints
 import ControllerParameters
+import UI_Skeleton
 
 # --- define button ---
 def clic_bouton_Skeleton(*args):
     """Function to create skeleton."""
-    Create_Skeleton()
+    UI_Skeleton.Skeleton_Parameters_UI()
 
 def clic_Button_JointBend(*args):
     """
