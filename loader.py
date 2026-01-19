@@ -18,10 +18,11 @@ MODULES_DEPENDANTS = [
     'Joint_Bend', 
     'Mirror', 
     'Skeleton',
-    'UI_Skeleton'
+    'UI_Skeleton',
+    'BP_Skeleton',
 ]
 
-# ÉTAPE CRUCIALE : Path Finding
+# Path Finding
 # Replace the path by the path of the folder where all the.py are
 CHEMIN_DU_PROJET = r"C:\Users\Arthur\Desktop\Travail\Scripts\Rig_Interface_Construction\Tools-Rig" 
 # -----------------------------------
