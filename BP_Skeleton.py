@@ -5,6 +5,7 @@ import math
 import maya.api.OpenMaya as om
 
 def Create_BlueprintSkeleton():
+        #Pelvis
     pelvis_sphere = cmds.polySphere (name='Pelvis_loc' , radius=0.5)[0]
     cmds.setAttr(f"{pelvis_sphere}.translate", 0, 50, 0, type='double3')
     cmds.setAttr(f"{pelvis_sphere}.rotateAxis", -90, 0, 90, type='double3')
@@ -16,6 +17,26 @@ def Create_BlueprintSkeleton():
     cmds.sets(pelvis_sphere, edit=True, forceElement=sg)
     cmds.select(clear=True)
 
+    #Spine
+    spine_spheres = []
+    for i in range(1, 5):
+        name = f"Spine_{i:02d}"
+        y_pos = 65 + (i -1) * 10
+    
+        sphere = cmds.polySphere(name=name, radius=0.5)[0]
+        cmds.setAttr(f"{sphere}.translate", 0, y_pos, 0, type='double3')
+        cmds.setAttr(f"{sphere}.rotate", -90, 0, 90, type='double3')
+
+        spine_spheres.append(sphere)
+    
+    color_node = cmds.shadingNode('lambert', asShader=True, name="Spine_Yellow_Shader")
+    cmds.setAttr(f"{color_node}.color", 1.0, 1.0, 0, type='double3')
+    sg = cmds.sets(renderable=True, noSurfaceShader=True, empty=True, name="Yellow_ShaderSG")
+    cmds.connectAttr(f"{color_node}.outColor", f"{sg}.surfaceShader")
+    cmds.sets(spine_spheres, edit=True, forceElement=sg)
+    cmds.select(clear=True)
+    
+    #legs 
     leftLeg_sphere = cmds.polySphere (name ='Left_Leg_loc' , radius=0.5)[0]
     cmds.setAttr(f"{leftLeg_sphere}.translate", 10, 45, 0, type='double3')
     cmds.setAttr(f"{leftLeg_sphere}.rotateAxis", 0, 180, 90, type='double3')
@@ -57,4 +78,4 @@ def Create_BlueprintSkeleton():
 
     grpPelvis=cmds.group(empty=True, name='BP_Skeleton')
     cmds.parent(pelvis_sphere, grpPelvis)
-    cmds.parent(leftFoot_sphere, grpPelvis)
+    cmds.parent(leftFoot_sphere, grpPelvis) 
