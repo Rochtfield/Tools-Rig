@@ -5,10 +5,11 @@ import math
 import maya.api.OpenMaya as om
 
 def Create_BlueprintSkeleton():
-        #Pelvis
+    #Pelvis
     pelvis_sphere = cmds.polySphere (name='Pelvis_loc' , radius=0.5)[0]
     cmds.setAttr(f"{pelvis_sphere}.translate", 0, 50, 0, type='double3')
     cmds.setAttr(f"{pelvis_sphere}.rotateAxis", -90, 0, 90, type='double3')
+    grpPelvis=cmds.group(empty=True, name='BP_Skeleton')
 
     Color = cmds.shadingNode('lambert', asShader=True, name="Color_Shader")
     cmds.setAttr(f"{Color}.color", 1.0 , 1.0, 0, type='double3')
@@ -19,15 +20,23 @@ def Create_BlueprintSkeleton():
 
     #Spine
     spine_spheres = []
+    spines_grp = []
     for i in range(1, 5):
-        name = f"Spine_{i:02d}"
-        y_pos = 65 + (i -1) * 10
-    
-        sphere = cmds.polySphere(name=name, radius=0.5)[0]
+        name_spine_sphere = f"Spine_{i:02d}"
+        y_pos = 60 + (i -1) * 10
+        sphere = cmds.polySphere(name=name_spine_sphere, radius=0.5)[0]
         cmds.setAttr(f"{sphere}.translate", 0, y_pos, 0, type='double3')
         cmds.setAttr(f"{sphere}.rotate", -90, 0, 90, type='double3')
-
+        grp_spine = cmds.group(empty=True, name = name_spine_sphere + "_Grp")
+        cmds.matchTransform(grp_spine, sphere)
+        cmds.parent(sphere, grp_spine)
+        cmds.parent(grp_spine, grpPelvis)
+        
         spine_spheres.append(sphere)
+        spines_grp.append(grp_spine)
+
+    cmds.pointConstraint(pelvis_sphere, spine_spheres[1], spines_grp[0],  maintainOffset=True)
+    cmds.pointConstraint(spine_spheres[3], spine_spheres[1], spines_grp[2], maintainOffset=True)
     
     color_node = cmds.shadingNode('lambert', asShader=True, name="Spine_Yellow_Shader")
     cmds.setAttr(f"{color_node}.color", 1.0, 1.0, 0, type='double3')
@@ -69,13 +78,14 @@ def Create_BlueprintSkeleton():
     cmds.connectAttr(f"{Color}.outColor", f"{sg}.surfaceShader")
     cmds.sets(LeftSpheres, edit=True, forceElement=sg)
     cmds.select(clear=True)
-
+    
+    # Constraint all under Pelvis
+    # Legs
     cmds.pointConstraint(leftLeg_sphere, leftFoot_sphere, grp,  maintainOffset=True)
     cmds.parent(leftToeEnd_sphere, leftToe_sphere)
     cmds.parent(leftToe_sphere, leftFoot_sphere)
     cmds.parent(leftLeg_sphere, pelvis_sphere)
     cmds.parent(grp,pelvis_sphere)
-
-    grpPelvis=cmds.group(empty=True, name='BP_Skeleton')
+    #Pelvis
     cmds.parent(pelvis_sphere, grpPelvis)
-    cmds.parent(leftFoot_sphere, grpPelvis) 
+    cmds.parent(leftFoot_sphere, grpPelvis)
