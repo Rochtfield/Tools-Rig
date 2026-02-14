@@ -68,13 +68,89 @@ def Create_BlueprintSkeleton():
         arm_sphere = cmds.polySphere(name=name_arm_sphere, radius=0.5)[0]
         cmds.setAttr(f"{arm_sphere}.translate", x_pos, 90, 0, type='double3')
         cmds.setAttr(f"{arm_sphere}.rotate", -90, 0, 0, type='double3')
-        grp_arm =cmds.group(empty=True, name = name_arm_sphere + "_Grp")
+        grp_arm = cmds.group(empty=True, name = name_arm_sphere + "_Grp")
         cmds.matchTransform(grp_arm, arm_sphere)
         cmds.parent(arm_sphere, grp_arm)
         arm_Grp.append(grp_arm)
         arm_Sphere.append(arm_sphere)
 
-    cmds.parentConstraint (spine_spheres[4], arm_Grp[0], maintainOffset=True)
+    cmds.parent (arm_Grp[0], spine_spheres[4])
+    cmds.select(clear=True)
+
+    #Fingers
+    Thumb_Sphere = []
+    Index_Sphere = []
+    Middle_Sphere = []
+    Ring_Sphere = []
+    Pinky_Sphere = []
+    Thumb_Grp = []
+    Index_Grp = []
+    Middle_Grp = []
+    Ring_Grp = []
+    Pinky_Grp = []
+
+    name_finger_Thumb = ["Left_Thumb_01", "Left_Thumb_02", "Left_Thumb_03", "Left_ThumbEnd"]
+    name_finger_Index = ["Left_Index_01", "Left_Index_02", "Left_Index_03", "Left_IndexEnd"]
+    name_finger_Middle = ["Left_Middle_01", "Left_Middle_02", "Left_Middle_03", "Left_MiddleEnd"]
+    name_finger_Ring = ["Left_Ring_01", "Left_Ring_02", "Left_Ring_03", "Left_RingEnd"]
+    name_finger_Pinky = ["Left_Pinky_01", "Left_Pinky_02", "Left_Pinky_03", "Left_PinkyEnd"]
+    for i in range (0,4):
+        name_thumb_sphere = name_finger_Thumb [i]
+        Z_pos_Thumb = 5 + (i) * 2
+        thumb_sphere = cmds.polySphere(name=name_thumb_sphere, radius=0.5)[0]
+        cmds.setAttr(f"{thumb_sphere}.translate", 42, 90, Z_pos_Thumb, type='double3')
+        cmds.setAttr(f"{thumb_sphere}.rotate", -90, -90, 0, type='double3')
+        grp_thumb = cmds.group(empty=True, name = name_thumb_sphere + "_Grp")
+        cmds.matchTransform (grp_thumb, thumb_sphere)
+        cmds.parent (thumb_sphere, grp_thumb)
+
+        name_index_sphere = name_finger_Index [i]
+        x_pos_Index = 45 + (i) * 2
+        index_sphere = cmds.polySphere(name=name_index_sphere, radius=0.5)[0]
+        cmds.setAttr(f"{index_sphere}.translate", x_pos_Index, 90, 2, type='double3')
+        cmds.setAttr(f"{index_sphere}.rotate", -90, 0, 0, type='double3')
+        grp_index = cmds.group(empty=True, name = name_index_sphere + "_Grp")
+        cmds.matchTransform (grp_index, index_sphere)
+        cmds.parent (index_sphere, grp_index)
+
+        name_middle_sphere = name_finger_Middle [i]
+        x_pos_Middle = 45 + (i) * 2
+        middle_sphere = cmds.polySphere(name=name_middle_sphere, radius=0.5)[0]
+        cmds.setAttr(f"{middle_sphere}.translate",  x_pos_Middle, 90, 0, type='double3')
+        cmds.setAttr(f"{middle_sphere}.rotate", -90, 0, 0, type='double3')
+        grp_middle = cmds.group(empty=True, name = name_middle_sphere + "_Grp")
+        cmds.matchTransform (grp_middle, middle_sphere)
+        cmds.parent (middle_sphere, grp_middle)
+
+        name_ring_sphere = name_finger_Ring [i]
+        x_pos_Ring = 45 + (i) * 2
+        ring_sphere = cmds.polySphere(name=name_ring_sphere, radius=0.5)[0]
+        cmds.setAttr(f"{ring_sphere}.translate",  x_pos_Ring, 90, -2, type='double3')
+        cmds.setAttr(f"{ring_sphere}.rotate", -90, 0, 0, type='double3')
+        grp_ring = cmds.group(empty=True, name = name_ring_sphere + "_Grp")
+        cmds.matchTransform (grp_ring, ring_sphere)
+        cmds.parent (ring_sphere, grp_ring)
+
+        name_pinky_sphere = name_finger_Pinky [i]
+        x_pos_Pinky = 45 + (i) * 2
+        pinky_sphere = cmds.polySphere(name=name_pinky_sphere, radius=0.5)[0]
+        cmds.setAttr(f"{pinky_sphere}.translate",  x_pos_Pinky, 90, -4, type='double3')
+        cmds.setAttr(f"{pinky_sphere}.rotate", -90, 0, 0, type='double3')
+        grp_pinky = cmds.group(empty=True, name = name_pinky_sphere + "_Grp")
+        cmds.matchTransform (grp_pinky, pinky_sphere)
+        cmds.parent (pinky_sphere, grp_pinky)
+        
+        Thumb_Sphere.append(thumb_sphere)
+        Index_Sphere.append(index_sphere)
+        Middle_Sphere.append(middle_sphere)
+        Ring_Sphere.append(ring_sphere)
+        Pinky_Sphere.append(pinky_sphere)
+        Thumb_Grp.append(grp_thumb)
+        Index_Grp.append(grp_index)
+        Middle_Grp.append(grp_middle)
+        Ring_Grp.append(grp_ring)
+        Pinky_Grp.append(grp_pinky)
+        
     cmds.select(clear=True)
 
     #head
@@ -119,13 +195,41 @@ def Create_BlueprintSkeleton():
 
     # Constraint all under Pelvis
     # Arm
-    arm_Grp.append(grp_arm)
-    arm_Sphere.append(arm_sphere)
     cmds.parent(arm_Grp[3], arm_Sphere[0])
     cmds.parent(arm_Grp[2], arm_Sphere[0])
     cmds.parent(arm_Grp[1], arm_Sphere[0])
     cmds.pointConstraint(arm_Sphere[1], arm_Sphere[3], arm_Grp[2],  maintainOffset=True)
-    cmds.select(clear=True)
+
+    #Fingers
+
+    #Thumb
+    cmds.parent(Thumb_Grp[3], Thumb_Sphere[2])
+    cmds.parent(Thumb_Grp[2], Thumb_Sphere[1])
+    cmds.parent(Thumb_Grp[1], Thumb_Sphere[0])
+    cmds.parent(Thumb_Grp[0], arm_Sphere[3])
+    #Index
+    cmds.parent(Index_Grp[3], Index_Sphere[2])
+    cmds.parent(Index_Grp[2], Index_Sphere[1])
+    cmds.parent(Index_Grp[1], Index_Sphere[0])
+    cmds.parent(Index_Grp[0], arm_Sphere[3])
+    #Middle
+    cmds.parent(Middle_Grp[3], Middle_Sphere[2])
+    cmds.parent(Middle_Grp[2], Middle_Sphere[1])
+    cmds.parent(Middle_Grp[1], Middle_Sphere[0])
+    cmds.parent(Middle_Grp[0], arm_Sphere[3])
+    #Ring
+    cmds.parent(Ring_Grp[3], Ring_Sphere[2])
+    cmds.parent(Ring_Grp[2], Ring_Sphere[1])
+    cmds.parent(Ring_Grp[1], Ring_Sphere[0])
+    cmds.parent(Ring_Grp[0], arm_Sphere[3])
+    #Pinky
+    cmds.parent(Pinky_Grp[3], Pinky_Sphere[2])
+    cmds.parent(Pinky_Grp[2], Pinky_Sphere[1])
+    cmds.parent(Pinky_Grp[1], Pinky_Sphere[0])
+    cmds.parent(Pinky_Grp[0], arm_Sphere[3])
+
+    cmds.select(clear=True) 
+
     
     # Legs
     cmds.pointConstraint(leftLeg_sphere, leftFoot_sphere, grp,  maintainOffset=True)
