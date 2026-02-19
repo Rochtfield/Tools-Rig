@@ -12,8 +12,8 @@ def Create_BlueprintSkeleton():
     grpPelvis=cmds.group(empty=True, name='BP_Skeleton')
 
     #Spine
-    spine_spheres = []
-    spines_grp = []
+    Spine_Spheres = []
+    Spines_Grp = []
     for i in range(1, 5):
         name_spine_sphere = f"Spine_{i:02d}"
         y_pos = 60 + (i -1) * 10
@@ -25,11 +25,11 @@ def Create_BlueprintSkeleton():
         cmds.parent(sphere, grp_spine)
         cmds.parent(grp_spine, grpPelvis)
         
-        spine_spheres.append(sphere)
-        spines_grp.append(grp_spine)
+        Spine_Spheres.append(sphere)
+        Spines_Grp.append(grp_spine)
 
-    cmds.pointConstraint(pelvis_sphere, spine_spheres[1], spines_grp[0],  maintainOffset=True)
-    cmds.pointConstraint(spine_spheres[3], spine_spheres[1], spines_grp[2], maintainOffset=True)
+    cmds.pointConstraint(pelvis_sphere, Spine_Spheres[1], Spines_Grp[0],  maintainOffset=True)
+    cmds.pointConstraint(Spine_Spheres[3], Spine_Spheres[1], Spines_Grp[2], maintainOffset=True)
     
     #legs
     leftLeg_sphere = cmds.polySphere (name ='Left_Leg_loc' , radius=0.5)[0]
@@ -60,7 +60,6 @@ def Create_BlueprintSkeleton():
     #arm
     arm_Sphere = []
     arm_Grp = []
-    spine_spheres.append(sphere)
     name_arm = ["Left_Clav", "Left_Arm", "Left_Elbow", "Left_Wrist"]
     for i in range (0,4):
         name_arm_sphere = name_arm [i]
@@ -151,7 +150,6 @@ def Create_BlueprintSkeleton():
     #neck
     Neck_Sphere = []
     Neck_Grp = []
-    spine_spheres.append(sphere)
     for i in range(1,3):
         name_neck_sphere = f"Neck_{i:02d}"
         y_pos = 95 + (i -1) * 5
@@ -181,7 +179,6 @@ def Create_BlueprintSkeleton():
         Head_Grp.append(grp_head)
 
     # color
-    arm_Grp.append(grp_arm)
     LeftSpheres = [leftLeg_sphere, leftKnee_sphere, leftFoot_sphere, leftToe_sphere, leftToeEnd_sphere,]
     Color = cmds.shadingNode('lambert', asShader=True, name="Color_Shader")
     cmds.setAttr(f"{Color}.color", 1.0 , 0, 0, type='double3')
@@ -195,7 +192,7 @@ def Create_BlueprintSkeleton():
     cmds.setAttr(f"{color_node}.color", 1.0, 1.0, 0, type='double3')
     sg = cmds.sets(renderable=True, noSurfaceShader=True, empty=True, name="Yellow_Shader")
     cmds.connectAttr(f"{color_node}.outColor", f"{sg}.surfaceShader")
-    cmds.sets(spine_spheres, edit=True, forceElement=sg)
+    cmds.sets(Spine_Spheres, edit=True, forceElement=sg)
     cmds.select(clear=True)
 
     Color = cmds.shadingNode('lambert', asShader=True, name="Color_Shader")
@@ -207,7 +204,7 @@ def Create_BlueprintSkeleton():
 
     # Constraint all under Pelvis
     # Arm
-    cmds.parent (arm_Grp[0], spine_spheres[4])
+    cmds.parent(arm_Grp[0], Spine_Spheres[3])
     cmds.parent(arm_Grp[3], arm_Sphere[0])
     cmds.parent(arm_Grp[2], arm_Sphere[0])
     cmds.parent(arm_Grp[1], arm_Sphere[0])
@@ -250,7 +247,7 @@ def Create_BlueprintSkeleton():
     
     #Head - Neck
     cmds.parent(Neck_Grp[1], Neck_Sphere[0])
-    cmds.parent(Neck_Grp[0], spine_spheres[4])
+    cmds.parent(Neck_Grp[0], Spine_Spheres[3])
     
     cmds.parent(Head_Grp[1], Head_Sphere[0])
     cmds.parent(Head_Grp[0], Neck_Sphere[1])
