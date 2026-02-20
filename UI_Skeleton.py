@@ -7,15 +7,15 @@ from Skeleton import Create_Skeleton
 from BP_Skeleton import Create_BlueprintSkeleton
 
 def clic_buton_Skeleton(*args):
-    """Function to create skeleton."""
+    # Function to create skeleton
     Create_Skeleton()
 
 def clic_buton_BlueprintSkeleton(*args):
-    """Function who create a structure to snap to articulations"""
+    # Function who create a structure to snap to articulations
     Create_BlueprintSkeleton()
 
 def Skeleton_Parameters_UI():
-    """Creates a UI window for creating Skeleton."""
+    # Creates a UI window for creating Skeleton
     
     # Name of the window to ensure that there is only one
     window_name = "Skeleton Creator"

@@ -2,7 +2,6 @@
 import maya.cmds as cmds
 
 def Controller_Parameters_UI():
-    """Creates a UI window for creating controllers with shape options."""
     
     # Name of the window to ensure that there is only one
     window_name = "ctrl_creator_ui"
@@ -40,7 +39,6 @@ def Controller_Parameters_UI():
     cmds.menuItem(label="Red (13)")
     cmds.menuItem(label="Green (14)")
     
-    # Ajout d'un séparateur pour créer de l'espace avant la nouvelle section
     cmds.separator(height=15, style='in', parent=main_layout) 
     cmds.text(label="Extras Attributes:", parent=main_layout, align='center', font='boldLabelFont')
 
@@ -68,10 +66,7 @@ def Controller_Parameters_UI():
     cmds.showWindow(window)
 
 def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,IK_FK_Checkbox_Name,ReverseFoot_Checkbox_Name, Fingers_Param_Checkbox_Name, window_name):
-    """
-    Logic for creating the controller.
-    Called by the UI window button.
-    """
+
     ctrl_name = cmds.textField(name_field, query=True, text=True)
     shape = cmds.optionMenu(shape_menu, query=True, value=True)
     color_label = cmds.optionMenu(Color_Ctrl, query=True, value=True)
@@ -79,23 +74,23 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
     is_ReverseFoot_checked = cmds.checkBox(ReverseFoot_Checkbox_Name, query=True, value=True)
     is_Fingers_Param_Checked = cmds.checkBox(Fingers_Param_Checkbox_Name, query=True, value=True)
 
-    # Extract the color index from the menu label (ex : "Yellow (17)")
+    # Extract the color index from the menu label
     color_index = int(color_label.split('(')[-1].replace(')', ''))
     
     if not ctrl_name:
         cmds.warning("Please enter a valid name.")
         return
 
-    # 1. Create the parent group (Offset)
+    # Create the parent group (Offset)
     offset_grp = cmds.group(empty=True, name=f"{ctrl_name}_Ctrl_Grp")
     
-    # 2. Create the main group (Ctrl)
+    # Create the main group (Ctrl)
     ctrl_grp = cmds.group(empty=True, name=f"{ctrl_name}_Offset_Grp")
     
-    # 3. Set the Ctrl group to the Offset group
+    # Set the Ctrl group to the Offset group
     cmds.parent(ctrl_grp, offset_grp)
     
-    # 4. Create the shape of the controller according to the chosen option
+    # Create the shape of the controller according to the chosen option
     ctrl_shape = None
     if shape == "Circle":
         ctrl_shape = cmds.circle(name=f"{ctrl_name}_Ctrl", normal=[1, 0, 0])[0]

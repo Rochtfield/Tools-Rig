@@ -10,34 +10,34 @@ import UI_Skeleton
 
 # --- define button ---
 def clic_bouton_Skeleton(*args):
-    """Function to create skeleton."""
+    #Function to create skeleton
     UI_Skeleton.Skeleton_Parameters_UI()
 
 def clic_Button_JointBend(*args):
-    """
-    Main function to insert joints between two selected joints.
-    It displays a dialog window to ask for the number of joints.
-    """
+    
+    #Main function to insert joints between two selected joints
+    #It displays a dialog window to ask for the number of joints
+
     Target_Joints()
     Insert_Joints()
 
 def clic_bouton_DeformersJoint(*args):
-    """Function for the main button deformersJoint."""
+    #Function for the main button deformersJoint
     DeformersJoint()
 
 def clic_Button_MirrorJoint(*args):
-    """for MirrorJoint"""
+    #for MirrorJoint
     MirrorJoints()
 
 def clic_Buton_ControlerParam(*args):
-    """Creates a UI window for creating controllers with shape options."""
+    #Creates a UI window for creating controllers with shape options
     
     ControllerParameters.Controller_Parameters_UI()
 
 
 # --- Main function for UI ---
 def create_main_window():
-    """Create the main window with buttons and a drop-down menu."""
+    #Create the main window with buttons and a drop-down menu
     
     # Destroy the old window if it exists
     window_name = "Window"

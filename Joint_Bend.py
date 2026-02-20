@@ -42,7 +42,6 @@ def Target_Joints():
             return
 
 def Insert_Joints(start_joint_name, end_joint_name, number_of_joints_to_insert):
-    """Inserts equidistant joints with correct orientation for mirror chains."""
 
  # Save the hierarchy to not break it
     end_joint_parent = cmds.listRelatives(end_joint_name, parent=True, fullPath=True)
