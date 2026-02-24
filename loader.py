@@ -20,6 +20,7 @@ MODULES_DEPENDANTS = [
     'Skeleton',
     'UI_Skeleton',
     'BP_Skeleton',
+    'AttributeFunction',
 ]
 
 # Path Finding

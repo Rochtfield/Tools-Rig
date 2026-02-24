@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import maya.cmds as cmds
+from AttributeFunction import Add_Attribute
 
 def Controller_Parameters_UI():
     
@@ -103,152 +104,34 @@ def create_controller_logic(name_field, shape_menu, selected_joints, Color_Ctrl,
 
     if is_ikfk_checked is True:
             
-            enum_string = "___________"
-            cmds.addAttr(
-                ctrl_shape, 
-                longName="IK_FK_Switch", 
-                attributeType='enum',
-                enumName=enum_string,
-                defaultValue=0,
-                keyable=True,
-            )
-            cmds.addAttr(
-                ctrl_shape, 
-                longName="IK_FK", 
-                attributeType='float', 
-                minValue=0.0, 
-                maxValue=1.0, 
-                defaultValue=0.0, 
-                keyable=True,
-                niceName="IKFK Switch"
-            )
+        Add_Attribute("IK_FK_Switch", (ctrl_shape), "enum", "___________", 0, 0)
+
+        Add_Attribute("IK_FK", (ctrl_shape), "float", "", 0.0, 1.0)
         
 
     # Add Extra Attribute Reversefoot
 
     if is_ReverseFoot_checked is True:
             
-            enum_string = "___________"
-            cmds.addAttr(
-                ctrl_shape, 
-                longName="ReverseFoot", 
-                attributeType='enum',
-                enumName=enum_string,
-                defaultValue=0,
-                keyable=True,
-            )
-            cmds.addAttr(
-                ctrl_shape, 
-                longName="Bank", 
-                attributeType='float',
-                defaultValue=0.0, 
-                keyable=True,
-                niceName="Bank"
-            )
-            cmds.addAttr(
-                ctrl_shape, 
-                longName="Heel_Twist", 
-                attributeType='float', 
-                defaultValue=0.0, 
-                keyable=True,
-                niceName="Heel_Twist"
-            )
-            cmds.addAttr(
-                ctrl_shape, 
-                longName="Toe_Twist", 
-                attributeType='float',
-                defaultValue=0.0, 
-                keyable=True,
-                niceName="Toe_Twist"
-            )
-            cmds.addAttr(
-                ctrl_shape, 
-                longName="Toe_Clap", 
-                attributeType='float',
-                defaultValue=0.0, 
-                keyable=True,
-                niceName="Toe_Clap"
-            )
-            cmds.addAttr(
-                ctrl_shape, 
-                longName="Roll", 
-                attributeType='float', 
-                minValue=-10.0, 
-                maxValue=10.0, 
-                defaultValue=0.0, 
-                keyable=True,
-                niceName="Roll"
-            )
+        Add_Attribute("RverseFoot", ctrl_shape, "enum", "___________", 0, 0)
+        Add_Attribute("Bank", ctrl_shape, "float")
+        Add_Attribute("Heel_Twist", ctrl_shape, "float")
+        Add_Attribute("Toe_Twist", ctrl_shape, "float")
+        Add_Attribute("Toe_Clap", ctrl_shape, "float")
+        Add_Attribute("Roll", ctrl_shape, "float", "", -10, 10)
     
     # Add Fingers Paramaters
     
     if is_Fingers_Param_Checked is True : 
-        
-            enum_string = "___________"
-            cmds.addAttr(
-                ctrl_shape, 
-                longName="Fingers_Parameters", 
-                attributeType='enum',
-                enumName=enum_string,
-                defaultValue=0,
-                keyable=True,
-            )
-            cmds.addAttr(
-                ctrl_shape, 
-                longName="Thumb", 
-                attributeType='float',
-                defaultValue=0.0, 
-                keyable=True,
-                niceName="Thumb"
-            )
-            cmds.addAttr(
-                ctrl_shape, 
-                longName="Index", 
-                attributeType='float',
-                defaultValue=0.0, 
-                keyable=True,
-                niceName="Index"
-            )
-            cmds.addAttr(
-                ctrl_shape, 
-                longName="Middle", 
-                attributeType='float',
-                defaultValue=0.0, 
-                keyable=True,
-                niceName="Middle"
-            )
-            cmds.addAttr(
-                ctrl_shape, 
-                longName="Ring", 
-                attributeType='float',
-                defaultValue=0.0, 
-                keyable=True,
-                niceName="Ring"
-            )
-            cmds.addAttr(
-                ctrl_shape, 
-                longName="Pinky", 
-                attributeType='float',
-                defaultValue=0.0, 
-                keyable=True,
-                niceName="Pinky"
-            )
-            cmds.addAttr(
-                ctrl_shape, 
-                longName="Merge", 
-                attributeType='float',
-                defaultValue=0.0, 
-                keyable=True,
-                niceName="Merge"
-            )
-            cmds.addAttr(
-                ctrl_shape, 
-                longName="Grab", 
-                attributeType='float',
-                defaultValue=0.0, 
-                keyable=True,
-                niceName="Grab"
-            )
+            
+            Add_Attribute("Fingers_Parameters", ctrl_shape, "enum", "___________", 0, 0)
+            Add_Attribute("Thumb", ctrl_shape, "float")
+            Add_Attribute("Index", ctrl_shape, "float")
+            Add_Attribute("Middle", ctrl_shape, "float")
+            Add_Attribute("Ring", ctrl_shape, "float")
+            Add_Attribute("Pinky", ctrl_shape, "float")
+            Add_Attribute("Merge", ctrl_shape, "float")
+            Add_Attribute("Grab", ctrl_shape, "float")
 
     # 5. Parent the shape to the group Ctrl
     if ctrl_shape:
