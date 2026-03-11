@@ -74,4 +74,48 @@ def Create_Skeleton() :
             cmds.parent(Skeleton[Chains[0]], Skeleton["Left_Wrist"])
 
     #Leg
+
+    Chain_Order_Leg = ["Left_Leg_loc", "Left_Knee_loc", "Left_Foot_loc", "Left_Toe_loc", "Left_ToeEnd_loc"]
     
+    for i in range(1, len(Chain_Order_Leg)):
+        Childs_Leg = Chain_Order_Leg[i]
+        Parents_Leg = Chain_Order_Leg[i-1]
+
+        Child_Joint_Leg = Skeleton[Childs_Leg]
+        Parent_Joint_Leg = Skeleton[Parents_Leg]
+        cmds.parent(Child_Joint_Leg, Parent_Joint_Leg)
+
+    "Pense à changer le nom des leg joint bouffon"
+
+    #Head
+
+    Chain_Order_Head = ["Neck_01", "Neck_02", "Head", "HeadEnd"]
+    
+    for i in range (1,len(Chain_Order_Head)):
+        Childs_Head = Chain_Order_Head[i]
+        Parent_Head = Chain_Order_Head[i-1]
+    
+        Child_Joint_Head = Skeleton[Childs_Head]
+        Parent_Joint_Head = Skeleton[Parent_Head]
+        cmds.parent(Child_Joint_Head, Parent_Joint_Head)
+    
+    #Constraint
+    
+    Pelvis = "Pelvis_loc"
+    Pelvis_joint = Skeleton[Pelvis]
+    Neck = "Neck_01"
+    Neck_joint = Skeleton[Neck]
+    Clav = "Left_Clav"
+    Clav_joint = Skeleton[Clav]
+    Spine = "Spine_01"
+    Spine_joint = Skeleton[Spine]
+    SpineEnd = "Spine_04"
+    SpineEnd_joint = Skeleton[SpineEnd]
+    Leg = "Left_Leg_loc"
+    Leg_joint = Skeleton[Leg]
+
+    cmds.parent(Leg_joint, Pelvis_joint)
+    cmds.parent(Spine_joint, Pelvis_joint)
+    cmds.parent(Clav_joint, SpineEnd_joint)
+    cmds.parent(Neck_joint, SpineEnd_joint)
+
