@@ -99,7 +99,7 @@ def Create_Skeleton() :
         Parent_Joint_Head = Skeleton[Parent_Head]
         cmds.parent(Child_Joint_Head, Parent_Joint_Head)
     
-    #Constraint
+    #Constraint and orient
     
     Pelvis = "Pelvis_loc"
     Pelvis_joint = Skeleton[Pelvis]
@@ -116,6 +116,57 @@ def Create_Skeleton() :
 
     cmds.parent(Leg_joint, Pelvis_joint)
     cmds.parent(Spine_joint, Pelvis_joint)
+    cmds.joint(Pelvis_joint, edit=True, orientJoint='xyz', secondaryAxisOrient='yup', children=True)
+
     cmds.parent(Clav_joint, SpineEnd_joint)
     cmds.parent(Neck_joint, SpineEnd_joint)
 
+    # Mirror
+
+    start_joint = [Clav_joint, Leg_joint]
+
+    for joint in start_joint:
+    
+        # "check if joint have Left or Right in his name"
+        if 'Left_' in joint:
+            search_string = 'Left_'
+            replace_string = 'Right_'
+        elif 'Right_' in joint:
+            search_string = 'Right_'
+            replace_string = 'Left_'
+        else:
+            cmds.warning("joint selected must have 'Left_' or 'Right_' in his name")
+    
+    # execution of mirror
+    Right_Clav = cmds.mirrorJoint(Clav_joint, mirrorBehavior=True, mirrorYZ=True, searchReplace=(search_string, replace_string))
+    Right_Leg = cmds.mirrorJoint(Leg_joint, mirrorBehavior=True, mirrorYZ=True, searchReplace=(search_string, replace_string))
+
+    #IK Legs
+    Leg_joint = Skeleton[Leg]
+    Left_IK_Leg_Joint = cmds.duplicate(Leg_joint, rc = True)
+    Right_IK_Leg_Joint = cmds.duplicate(Right_Leg, rc = True)
+
+    All_IK_Joints = []
+
+    Chain_Rename = [Left_IK_Leg_Joint, Right_IK_Leg_Joint]
+
+    for Chain in Chain_Rename:
+        Chain_Proper_Name = []
+        for joint in Chain:
+            prefix = "left_IK" if "Left_" in joint else "Right_IK_"
+            New_Name = joint.replace("Left_", "Left_IK_").replace("Right_", "Right_IK_")
+
+            Final_Name = cmds.rename(joint, New_Name)
+            Chain_Proper_Name.append(Final_Name)
+
+        Knee = Chain_Proper_Name[1]
+        
+        #Set preferred Angle
+        cmds.setAttr(Knee + ".rotateX", 0.1)
+        cmds.joint(Knee, edit=True, spa=True)
+        cmds.setAttr(Knee + ".rotateX", 0)
+        
+        cmds.ikHandle(name = "Left_IK_Leg", startJoint = Chain_Proper_Name[0] , endEffector = Chain_Proper_Name[-3], solver="ikRPsolver")
+    
+    HRC_Group = cmds.group(empty=True, name="HRC_Skeleton")
+    cmds.parent(Chain_Proper_Name[0], HRC_Group)
