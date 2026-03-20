@@ -100,6 +100,7 @@ def Create_Skeleton() :
         cmds.parent(Child_Joint_Head, Parent_Joint_Head)
     
     #Constraint and orient
+    cmds.makeIdentity(list(Skeleton.values()), apply=True, rotate=True, translate=False, scale=False)
     
     Pelvis = "Pelvis_loc"
     Pelvis_joint = Skeleton[Pelvis]
@@ -113,14 +114,19 @@ def Create_Skeleton() :
     SpineEnd_joint = Skeleton[SpineEnd]
     Leg = "Left_Leg_loc"
     Leg_joint = Skeleton[Leg]
+    
+    #joint Orient
+    cmds.joint("Pelvis_loc_joint", edit=True, oj="xyz", sao="yup", ch=False, zso=True)
+    cmds.joint("Spine_01_joint", edit=True, oj="xyz", sao="yup", ch=True, zso=True)
+    cmds.joint("Left_Leg_loc_joint", edit=True, oj="xyz", sao="yup", ch=True, zso=True)
+    cmds.joint("Left_ToeEnd_loc_joint", edit=True, oj="none", ch=False, zso=True)
 
-    cmds.parent(Leg_joint, Pelvis_joint)
     cmds.parent(Spine_joint, Pelvis_joint)
+    cmds.parent(Leg_joint, Pelvis_joint)
     cmds.joint(Pelvis_joint, edit=True, orientJoint='xyz', secondaryAxisOrient='yup', children=True)
 
     cmds.parent(Clav_joint, SpineEnd_joint)
     cmds.parent(Neck_joint, SpineEnd_joint)
-
     # Mirror
 
     start_joint = [Clav_joint, Leg_joint]
@@ -149,24 +155,21 @@ def Create_Skeleton() :
     All_IK_Joints = []
 
     Chain_Rename = [Left_IK_Leg_Joint, Right_IK_Leg_Joint]
-
+    HRC_Group = cmds.group(empty=True, name="HRC_Skeleton")
     for Chain in Chain_Rename:
         Chain_Proper_Name = []
         for joint in Chain:
-            prefix = "left_IK" if "Left_" in joint else "Right_IK_"
-            New_Name = joint.replace("Left_", "Left_IK_").replace("Right_", "Right_IK_")
-
+            New_Name = joint.replace("Left_", "Left_IK_").replace("Right_", "Right_IK_").replace("joint1", "joint")
             Final_Name = cmds.rename(joint, New_Name)
             Chain_Proper_Name.append(Final_Name)
 
         Knee = Chain_Proper_Name[1]
         
         #Set preferred Angle
-        cmds.setAttr(Knee + ".rotateX", 0.1)
+        cmds.setAttr(Knee + ".rotateY", 0.1)
         cmds.joint(Knee, edit=True, spa=True)
-        cmds.setAttr(Knee + ".rotateX", 0)
+        cmds.setAttr(Knee + ".rotateY", 0)
         
         cmds.ikHandle(name = "Left_IK_Leg", startJoint = Chain_Proper_Name[0] , endEffector = Chain_Proper_Name[-3], solver="ikRPsolver")
+        cmds.parent(Chain_Proper_Name[0], HRC_Group)
     
-    HRC_Group = cmds.group(empty=True, name="HRC_Skeleton")
-    cmds.parent(Chain_Proper_Name[0], HRC_Group)
